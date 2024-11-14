@@ -1,7 +1,10 @@
-require "log4r"
-require "fileutils"
-require "vagrant/util/numeric"
-require "vagrant/util/experimental"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "log4r"
+Vagrant.require "fileutils"
+Vagrant.require "vagrant/util/numeric"
+Vagrant.require "vagrant/util/experimental"
 
 module VagrantPlugins
   module HyperV
@@ -14,8 +17,6 @@ module VagrantPlugins
         # @return [Hash] configured_disks - A hash of all the current configured disks
         def self.configure_disks(machine, defined_disks)
           return {} if defined_disks.empty?
-
-          return {} if !Vagrant::Util::Experimental.feature_enabled?("disks")
 
           machine.ui.info(I18n.t("vagrant.cap.configure_disks.start"))
 
@@ -152,13 +153,13 @@ module VagrantPlugins
 
             LOGGER.info("Attempting to create a new disk file '#{disk_file}' of size '#{disk_config.size}' bytes")
 
-            machine.provider.driver.create_disk(disk_file, disk_config.size, disk_provider_config)
+            machine.provider.driver.create_disk(disk_file, disk_config.size, **disk_provider_config)
           end
 
           disk_info = machine.provider.driver.get_disk(disk_file)
           disk_metadata = {UUID: disk_info["DiskIdentifier"], Name: disk_config.name, Path: disk_info["Path"]}
 
-          machine.provider.driver.attach_disk(disk_file, disk_provider_config)
+          machine.provider.driver.attach_disk(disk_file, **disk_provider_config)
 
           disk_metadata
         end

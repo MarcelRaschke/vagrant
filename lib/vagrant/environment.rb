@@ -1,17 +1,20 @@
-require 'fileutils'
-require 'json'
-require 'pathname'
-require 'set'
-require 'thread'
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require 'log4r'
+Vagrant.require 'fileutils'
+Vagrant.require 'json'
+Vagrant.require 'pathname'
+Vagrant.require 'set'
+Vagrant.require 'thread'
 
-require 'vagrant/util/file_mode'
-require 'vagrant/util/platform'
-require 'vagrant/util/hash_with_indifferent_access'
-require "vagrant/util/silence_warnings"
-require "vagrant/vagrantfile"
-require "vagrant/version"
+Vagrant.require 'log4r'
+
+Vagrant.require 'vagrant/util/file_mode'
+Vagrant.require 'vagrant/util/platform'
+Vagrant.require 'vagrant/util/hash_with_indifferent_access'
+Vagrant.require "vagrant/util/silence_warnings"
+Vagrant.require "vagrant/vagrantfile"
+Vagrant.require "vagrant/version"
 
 module Vagrant
   # A "Vagrant environment" represents a configuration of how Vagrant
@@ -68,8 +71,11 @@ module Vagrant
     # The path where the plugins are stored (gems)
     attr_reader :gems_path
 
-    # The path to the default private key
-    attr_reader :default_private_key_path
+    # The path to the default private keys directory
+    attr_reader :default_private_keys_directory
+
+    # The paths for each of the default private keys
+    attr_reader :default_private_key_paths
 
     # Initializes a new environment with the given options. The options
     # is a hash where the main available key is `cwd`, which defines where
@@ -174,7 +180,12 @@ module Vagrant
 
       # Setup the default private key
       @default_private_key_path = @home_path.join("insecure_private_key")
-      copy_insecure_private_key
+      @default_private_keys_directory = @home_path.join("insecure_private_keys")
+      if !@default_private_keys_directory.directory?
+        @default_private_keys_directory.mkdir
+      end
+      @default_private_key_paths = []
+      copy_insecure_private_keys
 
       # Initialize localized plugins
       plugins = Vagrant::Plugin::Manager.instance.localize!(self)
@@ -194,6 +205,13 @@ module Vagrant
 
       # Call the environment load hooks
       hook(:environment_load, runner: Action::PrimaryRunner.new(env: self))
+    end
+
+    # The path to the default private key
+    # NOTE: deprecated, used default_private_keys_directory instead
+    def default_private_key_path
+      # TODO(spox): Add deprecation warning
+      @default_private_key_path
     end
 
     # Return a human-friendly string for pretty printed or inspected
@@ -846,7 +864,7 @@ module Vagrant
         begin
           @logger.info("Creating: #{dir}")
           FileUtils.mkdir_p(dir)
-        rescue Errno::EACCES
+        rescue Errno::EACCES, Errno::EROFS
           raise Errors::HomeDirectoryNotAccessible, home_path: @home_path.to_s
         end
       end
@@ -996,11 +1014,12 @@ module Vagrant
     def process_configured_plugins
       return if !Vagrant.plugins_enabled?
       errors = vagrantfile.config.vagrant.validate(nil)
-      if !errors["vagrant"].empty?
+      if !Array(errors["vagrant"]).empty?
         raise Errors::ConfigInvalid,
           errors: Util::TemplateRenderer.render(
             "config/validation_failed",
-            errors: errors)
+            errors: {vagrant: errors["vagrant"]}
+          )
       end
       # Check if defined plugins are installed
       installed = Plugin::Manager.instance.installed_plugins
@@ -1053,14 +1072,18 @@ module Vagrant
       end
     end
 
-    # This method copies the private key into the home directory if it
-    # doesn't already exist.
+    # This method copies the private keys into the home directory if they
+    # do not already exist. The `default_private_key_path` references the
+    # original rsa based private key and is retained for compatibility. The
+    # `default_private_keys_directory` contains the list of valid private
+    # keys supported by Vagrant.
     #
-    # This must be done because `ssh` requires that the key is chmod
+    # NOTE: The keys are copied because `ssh` requires that the key is chmod
     # 0600, but if Vagrant is installed as a separate user, then the
     # effective uid won't be able to read the key. So the key is copied
     # to the home directory and chmod 0600.
-    def copy_insecure_private_key
+    def copy_insecure_private_keys
+      # First setup the deprecated single key path
       if !@default_private_key_path.exist?
         @logger.info("Copying private key to home directory")
 
@@ -1082,6 +1105,29 @@ module Vagrant
         if Util::FileMode.from_octal(@default_private_key_path.stat.mode) != "600"
           @logger.info("Changing permissions on private key to 0600")
           @default_private_key_path.chmod(0600)
+        end
+      end
+
+      # Now setup the key directory
+      Dir.glob(File.expand_path("keys/vagrant.key.*", Vagrant.source_root)).each do |source|
+        destination = default_private_keys_directory.join(File.basename(source))
+        default_private_key_paths << destination
+        next if File.exist?(destination)
+        begin
+          FileUtils.cp(source, destination)
+        rescue Errno::EACCES
+          raise Errors::CopyPrivateKeyFailed,
+            source: source,
+            destination: destination
+        end
+      end
+
+      if !Util::Platform.windows?
+        default_private_key_paths.each do |key_path|
+          if Util::FileMode.from_octal(key_path.stat.mode) != "600"
+            @logger.info("Changing permissions on private key (#{key_path}) to 0600")
+            key_path.chmod(0600)
+          end
         end
       end
     end

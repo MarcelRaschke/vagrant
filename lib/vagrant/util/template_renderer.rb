@@ -1,7 +1,10 @@
-require 'ostruct'
-require "pathname"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require 'erubi'
+Vagrant.require 'ostruct'
+Vagrant.require "pathname"
+
+Vagrant.require 'erubi'
 
 module Vagrant
   module Util

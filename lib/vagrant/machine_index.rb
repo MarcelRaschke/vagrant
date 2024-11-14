@@ -1,9 +1,12 @@
-require "json"
-require "pathname"
-require "securerandom"
-require "thread"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require "vagrant/util/silence_warnings"
+Vagrant.require "json"
+Vagrant.require "pathname"
+Vagrant.require "securerandom"
+Vagrant.require "thread"
+
+Vagrant.require "vagrant/util/silence_warnings"
 
 module Vagrant
   # MachineIndex is able to manage the index of created Vagrant environments
@@ -27,6 +30,7 @@ module Vagrant
   #       "uuid": {
   #         "name": "foo",
   #         "provider": "vmware_fusion",
+  #         "architecture": "amd64",
   #         "data_path": "/path/to/data/dir",
   #         "vagrantfile_path": "/path/to/Vagrantfile",
   #         "state": "running",
@@ -378,6 +382,11 @@ module Vagrant
       # @return [String]
       attr_accessor :provider
 
+      # The name of the architecture.
+      #
+      # @return [String]
+      attr_accessor :architecture
+
       # The last known state of this machine.
       #
       # @return [String]
@@ -424,6 +433,7 @@ module Vagrant
         @local_data_path  = raw["local_data_path"]
         @name             = raw["name"]
         @provider         = raw["provider"]
+        @architecture     = raw["architecture"]
         @state            = raw["state"]
         @full_state       = raw["full_state"]
         @vagrantfile_name = raw["vagrantfile_name"]
@@ -507,6 +517,7 @@ module Vagrant
           "local_data_path"  => @local_data_path.to_s,
           "name"             => @name,
           "provider"         => @provider,
+          "architecture"     => @architecture,
           "state"            => @state,
           "vagrantfile_name" => @vagrantfile_name,
           "vagrantfile_path" => @vagrantfile_path.to_s,

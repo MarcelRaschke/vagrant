@@ -1,5 +1,8 @@
-require "vagrant/util/template_renderer"
-require "base64"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "vagrant/util/template_renderer"
+Vagrant.require "base64"
 
 module VagrantPlugins
   module GuestWindows

@@ -1,9 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package client
 
 import (
 	"context"
 
 	"github.com/hashicorp/vagrant-plugin-sdk/component"
+	"github.com/hashicorp/vagrant-plugin-sdk/proto/vagrant_plugin_sdk"
 	"github.com/hashicorp/vagrant/internal/server/logviewer"
 	"github.com/hashicorp/vagrant/internal/server/proto/vagrant_server"
 )
@@ -61,18 +65,54 @@ func (c *Client) Commands(
 	return result.Init, nil
 }
 
-func (c *Client) Task(
+func (c *Client) BasisInit(
 	ctx context.Context,
-	op *vagrant_server.Job_RunOp,
 	mod JobModifier,
-) (*vagrant_server.Job_RunResult, error) {
+) (*vagrant_plugin_sdk.Ref_Basis, error) {
+	job := c.job()
+	job.Operation = &vagrant_server.Job_InitBasis{
+		InitBasis: &vagrant_server.Job_InitBasisOp{},
+	}
+	// Apply scoping to job
+	mod(job)
+	result, err := c.doJob(ctx, job, c.ui)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Basis.Basis, nil
+}
+
+func (c *Client) ProjectInit(
+	ctx context.Context,
+	mod JobModifier,
+) (*vagrant_plugin_sdk.Ref_Project, error) {
+	job := c.job()
+	job.Operation = &vagrant_server.Job_InitProject{
+		InitProject: &vagrant_server.Job_InitProjectOp{},
+	}
+	// Apply scoping to job
+	mod(job)
+	result, err := c.doJob(ctx, job, c.ui)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Project.Project, nil
+}
+
+func (c *Client) Command(
+	ctx context.Context,
+	op *vagrant_server.Job_CommandOp,
+	mod JobModifier,
+) (*vagrant_server.Job_CommandResult, error) {
 	if op == nil {
-		op = &vagrant_server.Job_RunOp{}
+		op = &vagrant_server.Job_CommandOp{}
 	}
 
 	job := c.job()
-	job.Operation = &vagrant_server.Job_Run{
-		Run: op,
+	job.Operation = &vagrant_server.Job_Command{
+		Command: op,
 	}
 	if mod != nil {
 		mod(job)

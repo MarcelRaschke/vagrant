@@ -1,4 +1,7 @@
-require "log4r"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "log4r"
 
 require_relative "mixin_provisioners"
 

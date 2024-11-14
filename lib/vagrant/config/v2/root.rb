@@ -1,6 +1,9 @@
-require "set"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require "vagrant/config/v2/util"
+Vagrant.require "set"
+
+Vagrant.require "vagrant/config/v2/util"
 
 module Vagrant
   module Config

@@ -1,7 +1,10 @@
-require "log4r"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require "vagrant/util/subprocess"
-require "vagrant/util/which"
+Vagrant.require "log4r"
+
+Vagrant.require "vagrant/util/subprocess"
+Vagrant.require "vagrant/util/which"
 
 require_relative "helper"
 

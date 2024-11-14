@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package funcs
 
 import (
@@ -379,7 +382,7 @@ func TestFileSet(t *testing.T) {
 			cty.StringVal("."),
 			cty.StringVal("\\"),
 			cty.SetValEmpty(cty.String),
-			true,
+			false,
 		},
 		{
 			cty.StringVal("testdata/filesystem"),

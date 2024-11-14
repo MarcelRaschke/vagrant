@@ -1,7 +1,10 @@
-require "pathname"
-require "tmpdir"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require "vagrant/util/safe_exec"
+Vagrant.require "pathname"
+Vagrant.require "tmpdir"
+
+Vagrant.require "vagrant/util/safe_exec"
 
 module VagrantPlugins
   module HostWindows

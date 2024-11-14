@@ -1,5 +1,8 @@
-require 'optparse'
-require 'securerandom'
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require 'optparse'
+Vagrant.require 'securerandom'
 
 module VagrantPlugins
   module CommandPackage

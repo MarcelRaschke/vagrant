@@ -1,11 +1,12 @@
-require "delegate"
-require "io/console"
-require "thread"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require "log4r"
-
-require "vagrant/util/platform"
-require "vagrant/util/safe_puts"
+Vagrant.require "delegate"
+Vagrant.require "io/console"
+Vagrant.require "thread"
+Vagrant.require "log4r"
+Vagrant.require "vagrant/util/platform"
+Vagrant.require "vagrant/util/safe_puts"
 
 module Vagrant
   module UI

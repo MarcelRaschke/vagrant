@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 require File.expand_path("../../../base", __FILE__)
 
 require "vagrant/util/downloader"
@@ -34,6 +37,31 @@ describe Vagrant::Util::Downloader do
        "--verbose", "--user-agent", described_class::USER_AGENT,
        "--output", destination, source, {}]
     }
+
+    context "on Windows" do
+      before do
+        allow(Vagrant::Util::Platform).to receive(:windows?).and_return(true)
+      end
+
+      it "should use best effort for ssl revocation check by default" do
+        expect(subject).to receive(:execute_curl) do |opts, *_|
+          expect(opts).to include("--ssl-revoke-best-effort")
+        end
+        subject.download!
+      end
+
+      context "when ssl revoke best effort is disabled" do
+        let(:options) { {disable_ssl_revoke_best_effort: true} }
+
+        it "should not use best effort for ssl revocation check" do
+          expect(subject).to receive(:execute_curl) do |opts, _|
+            expect(opts).not_to include("--ssl-revoke-best-effort")
+          end
+
+          subject.download!
+        end
+      end
+    end
 
     context "with UI" do
       let(:ui) { Vagrant::UI::Silent.new }

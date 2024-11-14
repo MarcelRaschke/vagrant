@@ -1,30 +1,7 @@
-{ lib
-, stdenv
-, autoconf
-, autogen
-, automake
-, go
-, go-bindata
-, go-changelog
-, go-mockery
-, go-protobuf
-, go-protobuf-json
-, go-tools
-, grpc-tools
-, grpcurl
-, libarchive
-, libpng
-, libtool
-, mkShell
-, nasm
-, nodejs-16_x
-, pkg-config
-, protobufPin
-, protoc-gen-doc
-, protoc-gen-go-grpc
-, ruby
-, zlib
-}:
+{ lib, stdenv, autoconf, autogen, automake, go, go-bindata, go-changelog
+, go-mockery, go-protobuf, go-protobuf-json, gotools, grpc-tools, grpcurl
+, libarchive, libpng, libtool, mkShell, nasm, nodejs_20, pkg-config, protobuf
+, protoc-gen-doc, protoc-gen-go-grpc, ruby_3_2, openssl_3_1, sqlite, zlib }:
 
 mkShell rec {
   name = "vagrant";
@@ -33,22 +10,24 @@ mkShell rec {
     go
     go-bindata
     grpcurl
-    nodejs-16_x
+    nodejs_20
     protoc-gen-doc
-    ruby
+    ruby_3_2
+    openssl_3_1
+
+    protobuf
+    protoc-gen-go-grpc
+    go-protobuf
+    go-protobuf-json
+    gotools
+    go-mockery
+    grpc-tools
 
     # Need bsdtar to run ruby tests
     libarchive
 
     # Custom packages, added to overlay
-    protobufPin
-    protoc-gen-go-grpc
-    go-protobuf
-    go-protobuf-json
-    go-tools
-    go-mockery
     go-changelog
-    grpc-tools
 
     # Needed for website/
     autoconf
@@ -70,4 +49,6 @@ mkShell rec {
     # to use the legacy Vagrant in this repo. See client.initVagrantRubyRuntime
     PATH=$PWD/binstubs:$PATH
   '';
+
+  hardeningDisable = [ "fortify" ];
 }

@@ -1,6 +1,9 @@
-require "cgi"
-require "uri"
-require "log4r"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "cgi"
+Vagrant.require "uri"
+Vagrant.require "log4r"
 
 require Vagrant.source_root.join("plugins/commands/cloud/client/client")
 

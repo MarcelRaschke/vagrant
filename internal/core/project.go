@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package core
 
 import (
@@ -217,6 +220,20 @@ func (p *Project) Init() error {
 	p.Closer(func() error {
 		return p.Save()
 	})
+
+	// TODO(spox): this was just added for testing. make cleaner
+	_, err = p.Client().UpsertProject(p.ctx,
+		&vagrant_server.UpsertProjectRequest{
+			Project: p.project,
+		},
+	)
+	if err != nil {
+		p.logger.Trace("failed to save project",
+			"error", err,
+		)
+
+		return err
+	}
 
 	// Set flag that this instance is setup
 	p.ready = true
@@ -614,9 +631,9 @@ func (p *Project) Ref() interface{} {
 	}
 }
 
-func (p *Project) Run(ctx context.Context, task *vagrant_server.Task) (err error) {
-	p.logger.Debug("running new task",
-		"task", task)
+func (p *Project) Run(ctx context.Context, task *vagrant_server.Job_CommandOp) (err error) {
+	p.logger.Debug("running new command",
+		"command", task)
 
 	cmd, err := p.basis.component(
 		ctx, component.CommandType, task.Component.Name)
@@ -625,7 +642,7 @@ func (p *Project) Run(ctx context.Context, task *vagrant_server.Task) (err error
 	}
 
 	fn := cmd.Value.(component.Command).ExecuteFunc(
-		strings.Split(task.CommandName, " "))
+		strings.Split(task.Command, " "))
 	result, err := p.callDynamicFunc(ctx, p.logger, fn, (*int32)(nil),
 		argmapper.Typed(ctx, task.CliArgs, p.jobInfo),
 		argmapper.ConverterFunc(cmd.mappers...),
@@ -709,6 +726,9 @@ func (p *Project) Save() error {
 				"error", err,
 			)
 		} else {
+			if p.project.Configuration == nil {
+				p.project.Configuration = &vagrant_server.Vagrantfile{}
+			}
 			p.project.Configuration.Finalized = val.Data
 		}
 	}

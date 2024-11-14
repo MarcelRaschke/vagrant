@@ -1,6 +1,9 @@
-require "tempfile"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require "vagrant/util/template_renderer"
+Vagrant.require "tempfile"
+
+Vagrant.require "vagrant/util/template_renderer"
 
 module VagrantPlugins
   module GuestDarwin

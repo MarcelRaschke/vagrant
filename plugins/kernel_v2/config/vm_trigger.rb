@@ -1,5 +1,9 @@
-require "log4r"
-require "securerandom"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "log4r"
+Vagrant.require "securerandom"
+
 require Vagrant.source_root.join("plugins/provisioners/shell/config")
 
 module VagrantPlugins

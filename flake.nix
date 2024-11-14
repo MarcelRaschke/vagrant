@@ -1,24 +1,18 @@
 {
   description = "HashiCorp Vagrant project";
 
-  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-  inputs.flake-utils.url = "github:numtide/flake-utils";
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/release-23.11";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
 
   outputs = { self, nixpkgs, flake-utils }:
-    let
-      localOverlay = import ./nix/overlay.nix;
-      overlays = [ localOverlay ];
-    in flake-utils.lib.eachDefaultSystem (system:
+    flake-utils.lib.eachDefaultSystem (system:
       let
+        localOverlay = import ./nix/overlay.nix;
         pkgs = import nixpkgs {
-          inherit system overlays;
+          system = "${system}";
+          overlays = [ localOverlay ];
         };
-      in {
-        legacyPackages = pkgs;
-        inherit (pkgs) devShell;
-      }) // {
-        # platform independent attrs
-        overlay = final: prev: (nixpkgs.lib.composeManyExtensions overlays) final prev;
-        inherit overlays;
-      };
+      in { inherit (pkgs) devShells; });
 }

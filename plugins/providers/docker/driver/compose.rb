@@ -1,5 +1,8 @@
-require "json"
-require "log4r"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "json"
+Vagrant.require "log4r"
 
 module VagrantPlugins
   module DockerProvider

@@ -1,7 +1,10 @@
-require "rgl/adjacency"
-require "rgl/traversal"
-require "rgl/dijkstra"
-require "rgl/topsort"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "rgl/adjacency"
+Vagrant.require "rgl/traversal"
+Vagrant.require "rgl/dijkstra"
+Vagrant.require "rgl/topsort"
 
 module VagrantPlugins
   module CommandServe

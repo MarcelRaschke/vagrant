@@ -1,5 +1,8 @@
-require "net/ftp"
-require "pathname"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "net/ftp"
+Vagrant.require "pathname"
 
 require_relative "adapter"
 require_relative "errors"

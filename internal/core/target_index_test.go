@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package core
 
 import (
@@ -91,9 +94,7 @@ func TestTargetIndexSet(t *testing.T) {
 func TestTargetIndexAll(t *testing.T) {
 	tp := TestMinimalProject(t)
 	ti, err := tp.TargetIndex()
-	if err != nil {
-		t.Error(err)
-	}
+	require.NoError(t, err)
 
 	// No Targets
 	targets, err := ti.All()

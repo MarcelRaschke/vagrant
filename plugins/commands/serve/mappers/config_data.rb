@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 module VagrantPlugins
   module CommandServe
     class Mappers
@@ -56,6 +59,22 @@ module VagrantPlugins
 
         def converter(fv)
           SDK::Config::Finalize.decode(fv.value.value)
+        end
+      end
+
+      class ConfigFinalizeResponseProtoFromConfigDataProto < Mapper
+        def initialize
+          super(
+            inputs: [
+              Input.new(type: SDK::Args::ConfigData),
+            ],
+            output: SDK::Config::FinalizeResponse,
+            func: method(:converter),
+          )
+        end
+
+        def converter(c)
+          SDK::Config::FinalizeResponse.new(data: c)
         end
       end
 

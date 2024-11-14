@@ -1,10 +1,13 @@
-require 'log4r'
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require 'vagrant/util/busy'
-require 'vagrant/util/platform'
-require 'vagrant/util/retryable'
-require 'vagrant/util/subprocess'
-require 'vagrant/util/which'
+Vagrant.require 'log4r'
+
+Vagrant.require 'vagrant/util/busy'
+Vagrant.require 'vagrant/util/platform'
+Vagrant.require 'vagrant/util/retryable'
+Vagrant.require 'vagrant/util/subprocess'
+Vagrant.require 'vagrant/util/which'
 
 module VagrantPlugins
   module ProviderVirtualBox
@@ -439,8 +442,8 @@ module VagrantPlugins
             if errored
               raise Vagrant::Errors::VBoxManageError,
                 command: command.inspect,
-                stderr:  r.stderr,
-                stdout:  r.stdout
+                stderr:  r.stderr.to_s.force_encoding("UTF-8"),
+                stdout:  r.stdout.to_s.force_encoding("UTF-8")
             end
           end
 
@@ -460,7 +463,9 @@ module VagrantPlugins
           end
 
           # Append in the options for subprocess
-          command << { notify: [:stdout, :stderr] }
+          # NOTE: We include the LANG env var set to C to prevent command output
+          #       from being localized
+          command << { notify: [:stdout, :stderr], env: env_lang}
 
           Vagrant::Util::Busy.busy(int_callback) do
             Vagrant::Util::Subprocess.execute(@vboxmanage_path, *command, &block)
@@ -468,6 +473,56 @@ module VagrantPlugins
         rescue Vagrant::Util::Subprocess::LaunchError => e
           raise Vagrant::Errors::VBoxManageLaunchError,
             message: e.to_s
+        end
+
+        private
+
+        # List of LANG values to attempt to use
+        LANG_VARIATIONS = %w(C.UTF-8 C.utf8 en_US.UTF-8 en_US.utf8 C POSIX).map(&:freeze).freeze
+
+        # By default set the LANG to C. If the host has the locale command
+        # available, check installed locales and verify C is included (or
+        # use C variant if available).
+        def env_lang
+          # If already set, just return immediately
+          return @env_lang if @env_lang
+
+          # Default the LANG to C
+          @env_lang = {LANG: "C"}
+
+          # If the locale command is not available, return default
+          return @env_lang if !Vagrant::Util::Which.which("locale")
+
+          if defined?(@@env_lang)
+            return @env_lang = @@env_lang
+          end
+
+          @logger.debug("validating LANG value for virtualbox cli commands")
+          # Get list of available locales on the system
+          result = Vagrant::Util::Subprocess.execute("locale", "-a")
+
+          # If the command results in an error, just log the error
+          # and return the default value
+          if result.exit_code != 0
+            @logger.warn("locale command failed (exit code: #{result.exit_code}): #{result.stderr}")
+            return @env_lang
+          end
+          available = result.stdout.lines.map(&:chomp).find_all { |l|
+            l == "C" || l == "POSIX" || l.start_with?("C.") || l.start_with?("en_US.")
+          }
+          @logger.debug("list of available C locales: #{available.inspect}")
+
+          # Attempt to find a valid LANG from locale list
+          lang = LANG_VARIATIONS.detect { |l| available.include?(l) }
+
+          if lang
+            @logger.debug("valid variation found for LANG value: #{lang}")
+            @env_lang[:LANG] = lang
+            @@env_lang = @env_lang
+          end
+
+          @logger.debug("LANG value set: #{@env_lang[:LANG].inspect}")
+          @env_lang
         end
       end
     end

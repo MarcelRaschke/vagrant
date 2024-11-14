@@ -1,4 +1,7 @@
-require "vagrant/capability_host"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "vagrant/capability_host"
 
 module Vagrant
   module Plugin

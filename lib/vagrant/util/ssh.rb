@@ -1,13 +1,16 @@
-require "log4r"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require 'childprocess'
+Vagrant.require "log4r"
 
-require "vagrant/util/file_mode"
-require "vagrant/util/platform"
-require "vagrant/util/safe_exec"
-require "vagrant/util/safe_puts"
-require "vagrant/util/subprocess"
-require "vagrant/util/which"
+Vagrant.require 'childprocess'
+
+Vagrant.require "vagrant/util/file_mode"
+Vagrant.require "vagrant/util/platform"
+Vagrant.require "vagrant/util/safe_exec"
+Vagrant.require "vagrant/util/safe_puts"
+Vagrant.require "vagrant/util/subprocess"
+Vagrant.require "vagrant/util/which"
 
 module Vagrant
   module Util
@@ -144,6 +147,13 @@ module Vagrant
           command_options += [
             "-o", "StrictHostKeyChecking=no",
             "-o", "UserKnownHostsFile=/dev/null"]
+        end
+
+        if !ssh_info[:disable_deprecated_algorithms]
+          command_options += [
+            "-o", "PubkeyAcceptedKeyTypes=+ssh-rsa",
+            "-o", "HostKeyAlgorithms=+ssh-rsa",
+          ]
         end
 
         # If we're not in plain mode and :private_key_path is set attach the private key path(s).

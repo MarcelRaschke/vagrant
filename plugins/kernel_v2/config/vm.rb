@@ -1,23 +1,17 @@
-require "pathname"
-require "securerandom"
-require "set"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require "vagrant"
-require "vagrant/action/builtin/mixin_synced_folders"
-require "vagrant/config/v2/util"
-require "vagrant/util/platform"
-require "vagrant/util/presence"
-require "vagrant/util/experimental"
-require "vagrant/util/map_command_options"
+Vagrant.require "pathname"
+Vagrant.require "securerandom"
+Vagrant.require "set"
 
-$LOAD_PATH << Vagrant.source_root.join("lib/vagrant/protobufs/proto").to_s
-
-require "vagrant/protobufs/proto/protostructure_pb"
-require "vagrant/protobufs/proto/vagrant_plugin_sdk/plugin_pb"
-require "vagrant/protobufs/proto/vagrant_plugin_sdk/plugin_services_pb"
-
-# Include mappers
-require Vagrant.source_root.join("plugins/commands/serve/command").to_s
+Vagrant.require "vagrant"
+Vagrant.require "vagrant/action/builtin/mixin_synced_folders"
+Vagrant.require "vagrant/config/v2/util"
+Vagrant.require "vagrant/util/platform"
+Vagrant.require "vagrant/util/presence"
+Vagrant.require "vagrant/util/experimental"
+Vagrant.require "vagrant/util/map_command_options"
 
 require File.expand_path("../vm_provisioner", __FILE__)
 require File.expand_path("../vm_subvm", __FILE__)
@@ -38,6 +32,7 @@ module VagrantPlugins
       attr_accessor :base_address
       attr_accessor :boot_timeout
       attr_accessor :box
+      attr_accessor :box_architecture
       attr_accessor :ignore_box_vagrantfile
       attr_accessor :box_check_update
       attr_accessor :box_url
@@ -48,6 +43,7 @@ module VagrantPlugins
       attr_accessor :box_download_checksum
       attr_accessor :box_download_checksum_type
       attr_accessor :box_download_client_cert
+      attr_accessor :box_download_disable_ssl_revoke_best_effort
       attr_accessor :box_download_insecure
       attr_accessor :box_download_location_trusted
       attr_accessor :box_download_options
@@ -74,6 +70,7 @@ module VagrantPlugins
         @base_address                  = UNSET_VALUE
         @boot_timeout                  = UNSET_VALUE
         @box                           = UNSET_VALUE
+        @box_architecture              = UNSET_VALUE
         @ignore_box_vagrantfile        = UNSET_VALUE
         @box_check_update              = UNSET_VALUE
         @box_download_ca_cert          = UNSET_VALUE
@@ -81,6 +78,7 @@ module VagrantPlugins
         @box_download_checksum         = UNSET_VALUE
         @box_download_checksum_type    = UNSET_VALUE
         @box_download_client_cert      = UNSET_VALUE
+        @box_download_disable_ssl_revoke_best_effort = UNSET_VALUE
         @box_download_insecure         = UNSET_VALUE
         @box_download_location_trusted = UNSET_VALUE
         @box_download_options          = UNSET_VALUE
@@ -412,12 +410,8 @@ module VagrantPlugins
             after = options.delete(:after)
           end
 
-          if Vagrant::Util::Experimental.feature_enabled?("dependency_provisioners")
-            opts = {before: before, after: after}
-            prov = VagrantConfigProvisioner.new(name, type.to_sym, **opts)
-          else
-            prov = VagrantConfigProvisioner.new(name, type.to_sym)
-          end
+          opts = {before: before, after: after}
+          prov = VagrantConfigProvisioner.new(name, type.to_sym, **opts)
           @provisioners << prov
         end
 
@@ -483,11 +477,6 @@ module VagrantPlugins
         # Add provider config
         disk_config.add_provider_config(**provider_options, &block)
 
-        if !Vagrant::Util::Experimental.feature_enabled?("disks")
-          @logger.warn("Disk config defined, but experimental feature is not enabled. To use this feature, enable it with the experimental flag `disks`. Disk will not be added to internal config, and will be ignored.")
-          return
-        end
-
         @disks << disk_config
       end
 
@@ -508,11 +497,6 @@ module VagrantPlugins
           cloud_init_config.set_options(options)
         end
 
-        if !Vagrant::Util::Experimental.feature_enabled?("cloud_init")
-          @logger.warn("cloud_init config defined, but experimental feature is not enabled. To use this feature, enable it with the experimental flag `cloud_init`. cloud_init config will not be added to internal config, and will be ignored.")
-          return
-        end
-
         @cloud_init_configs << cloud_init_config
       end
 
@@ -527,6 +511,11 @@ module VagrantPlugins
         @base_address = nil if @base_address == UNSET_VALUE
         @boot_timeout = 300 if @boot_timeout == UNSET_VALUE
         @box = nil if @box == UNSET_VALUE
+        @box_architecture = :auto if @box_architecture == UNSET_VALUE
+        # If box architecture value was set, force to string
+        if @box_architecture && @box_architecture != :auto
+          @box_architecture = @box_architecture.to_s
+        end
         @ignore_box_vagrantfile = false if @ignore_box_vagrantfile == UNSET_VALUE
 
         if @box_check_update == UNSET_VALUE
@@ -538,6 +527,7 @@ module VagrantPlugins
         @box_download_checksum = nil if @box_download_checksum == UNSET_VALUE
         @box_download_checksum_type = nil if @box_download_checksum_type == UNSET_VALUE
         @box_download_client_cert = nil if @box_download_client_cert == UNSET_VALUE
+        @box_download_disable_ssl_revoke_best_effort = false if @box_download_disable_ssl_revoke_best_effort == UNSET_VALUE
         @box_download_insecure = false if @box_download_insecure == UNSET_VALUE
         @box_download_location_trusted = false if @box_download_location_trusted == UNSET_VALUE
         @box_url = nil if @box_url == UNSET_VALUE
@@ -933,7 +923,7 @@ module VagrantPlugins
               end
             end
 
-            if options[:ip] && options[:ip].end_with?(".1") && (options[:type] || "").to_sym != :dhcp
+            if options[:ip] && (options[:ip].end_with?(".1") || options[:ip].end_with?(":1")) && (options[:type] || "").to_sym != :dhcp
               machine.ui.warn(I18n.t(
                 "vagrant.config.vm.network_ip_ends_in_one"))
             end

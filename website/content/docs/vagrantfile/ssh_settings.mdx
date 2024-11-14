@@ -27,6 +27,10 @@ defaults are typically fine, but you can fine tune whatever you would like.
 - `config.ssh.config` (string) - Path to a custom ssh_config file to use for configuring
   the SSH connections.
 
+- `config.ssh.disable_deprecated_algorithms` (boolean) - If `true`, this setting will
+  not configure the SSH client to allow connecting to a host using ssh-rsa key types
+  and host key algorithms. Defaults to false.
+
 - `config.ssh.dsa_authentication` (boolean) - If `false`, this setting will not include
   `DSAAuthentication` when ssh'ing into a machine. If this is not set, it will
   default to `true` and `DSAAuthentication=yes` will be used with ssh.
@@ -85,6 +89,12 @@ defaults are typically fine, but you can fine tune whatever you would like.
 
 - `config.ssh.keys_only` (boolean) - Only use Vagrant-provided SSH private keys (do not use
   any keys stored in ssh-agent). The default value is `true`.
+
+- `config.ssh.key_type` (string, symbol) - The SSH key type that should be used when generating
+  a new key to replace the default insecure key. Supported values are: `:ed25519`, `:ecdsa256`,
+  `:ecdsa384`, `:ecdsa521`, `:rsa`, and `:auto`. When the value is set to `:auto`, Vagrant will
+  automatically pick a type based on what is supported by the guest SSH server. The default
+  value is `:auto`.
 
 - `config.ssh.paranoid` (boolean) - Perform strict host-key verification. The default value is
   `false`.

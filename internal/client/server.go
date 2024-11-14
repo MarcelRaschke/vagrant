@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package client
 
 import (
@@ -9,17 +12,19 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"time"
+	//	"time"
 
+	"github.com/glebarez/sqlite"
+	//	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/vagrant-plugin-sdk/helper/paths"
-	bolt "go.etcd.io/bbolt"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	"github.com/hashicorp/vagrant/internal/protocolversion"
 	"github.com/hashicorp/vagrant/internal/server"
-	"github.com/hashicorp/vagrant/internal/server/proto/vagrant_server"
 	"github.com/hashicorp/vagrant/internal/server/singleprocess"
 	"github.com/hashicorp/vagrant/internal/serverclient"
 )
@@ -32,12 +37,11 @@ import (
 //
 // This function will do one of two things:
 //
-//   1. If connection options were given, it'll attempt to connect to
-//      an existing Vagrant server.
+//  1. If connection options were given, it'll attempt to connect to
+//     an existing Vagrant server.
 //
-//   2. If WithLocal was specified and no connection addresses can be
-//      found, this will spin up an in-memory server.
-//
+//  2. If WithLocal was specified and no connection addresses can be
+//     found, this will spin up an in-memory server.
 func (c *Client) initServerClient(ctx context.Context, cfg *clientConfig) (*grpc.ClientConn, error) {
 	log := c.logger.ResetNamed("vagrant.server")
 
@@ -103,9 +107,19 @@ func (c *Client) initLocalServer(ctx context.Context) (_ *grpc.ClientConn, err e
 	log.Debug("opening local mode DB", "path", path)
 
 	// Open our database
-	db, err := bolt.Open(path, 0600, &bolt.Options{
-		Timeout: 1 * time.Second,
+	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+		// Logger: logger.New(
+		// 	log.StandardLogger(&hclog.StandardLoggerOptions{InferLevels: true}),
+		// 	logger.Config{
+		// 		SlowThreshold:             200 * time.Millisecond,
+		// 		LogLevel:                  logger.Info,
+		// 		IgnoreRecordNotFoundError: false,
+		// 		Colorful:                  true,
+		// 	},
+		// ),
 	})
+	db.Exec("PRAGMA foreign_keys = ON")
 	if err != nil {
 		return
 	}
@@ -125,8 +139,6 @@ func (c *Client) initLocalServer(ctx context.Context) (_ *grpc.ClientConn, err e
 		_, err := impl.PruneOldJobs(ctx, nil)
 		return err
 	})
-
-	cleanups = append(cleanups, func() error { return db.Close() })
 
 	// We listen on a random locally bound port
 	// TODO: we should use Unix domain sockets if supported
@@ -154,22 +166,6 @@ func (c *Client) initLocalServer(ctx context.Context) (_ *grpc.ClientConn, err e
 	)
 
 	client, err := serverclient.NewVagrantClient(ctx, log, ln.Addr().String())
-	if err != nil {
-		return
-	}
-
-	// Setup our server config. The configuration is specifically set so
-	// so that there is no advertise address which will disable the CEB
-	// completely.
-	_, err = client.SetServerConfig(ctx, &vagrant_server.SetServerConfigRequest{
-		Config: &vagrant_server.ServerConfig{
-			AdvertiseAddrs: []*vagrant_server.ServerConfig_AdvertiseAddr{
-				{
-					Addr: "",
-				},
-			},
-		},
-	})
 	if err != nil {
 		return
 	}

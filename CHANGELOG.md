@@ -1,4 +1,4 @@
-## UNRELEASED 
+## 2.4.4.dev (UNRELEASED)
 
 FEATURES:
 
@@ -7,6 +7,174 @@ IMPROVEMENTS:
 BUG FIXES:
 
 VAGRANT-GO:
+
+## 2.4.3 (November 12, 2024)
+
+IMPROVEMENTS:
+
+- command/cloud: Support HCP authentication [GH-13540]
+
+BUG FIXES:
+
+- core: Relax constraint on logger dependency [GH-13532]
+
+## 2.4.2 (November 01, 2024)
+
+FEATURES:
+
+- provider/virtualbox: Add support for VirtualBox 7.1 [GH-13513]
+
+IMPROVEMENTS:
+
+- core: Always downcase type value when getting digest for checksum calculation [GH-13471]
+- core: Activate all runtime dependencies at startup [GH-13526]
+- guest/debian: Fix NFS install capability to prevent hang on install [GH-13411]
+- kernel_v2/config: Add warning for IPv6 address ending with :1 [GH-13362]
+- provider/docker: Properly match container ID when trailing output is present [GH-13475]
+- provider/docker: Support build with containerd storage [GH-13343]
+- provider/virtualbox: Allow paused state when booting vm [GH-13496]
+- provider/virtualbox: Handling warnings in output when detecting version [GH-13394]
+- synced_folder/nfs: Output mounting entry [GH-13383]
+- synced_folder/smb: Adjust ordering in mount entry output [GH-13383]
+
+BUG FIXES:
+
+- command/cloud: Fix provider upload [GH-13467]
+- host/bsd: Use nfsd update command instead of restart [GH-13490]
+- kernel_v2/config: Fix IP address check [GH-13494] 
+- provider/docker: Prevent error if network configuration data is missing [GH-13337, GH-13373]
+- provider/docker: Fix docker-exec commands to pass kwargs correctly [GH-13488]
+- provider/docker: Fix docker to not rebuild image if it already exists [GH-13489]
+- provider/virtualbox: Prevent encoding errors within error translation [GH-13525]
+- provider/hyperv: Fix configure disks capability [GH-13346]
+- provisioner/ansible: Fix version detection [GH-13375]
+- provisioner/ansible: Support double digit versions [GH-13493]
+- provisioner/salt: Fix bootstrap script URLs [GH-13517]
+- synced_folder/nfs: Fix upstart detection [GH-13409]
+
+VAGRANT-GO:
+
+## 2.4.1 (January 19, 2024)
+
+FEATURES:
+
+IMPROVEMENTS:
+
+- communicator/ssh: Support ECDSA type keys for insecure key replacement [GH-13327]
+- communicator/ssh: Inspect guest for supported key types [GH-13334]
+- core: Update Ruby constraint to allow Ruby 3.3 [GH-13335]
+- core/bundler: Force strict dependencies for default gems [GH-13336]
+- provisioner/ansible: Support pip installation for RHEL >= 8 [GH-13326]
+- util/keypair: Add support for ECDSA keys [GH-13327]
+
+BUG FIXES:
+
+- command/plugin: Fix plugin extension installation on Windows [GH-13328]
+- communicator/ssh: Fix private key writing on Windows [GH-13329]
+- core: Fix Vagrant SSL helper detection on macOS [GH-13277]
+- core: Fix box collection sorting [GH-#13320]
+- util/platform: Fix architecture mapping for Windows [GH-13278]
+
+VAGRANT-GO:
+
+## 2.4.0 (October 16, 2023)
+
+FEATURES:
+
+- core: Add architecture support [GH-13239]
+
+IMPROVEMENTS:
+
+- communicator/ssh: Add key type detection on insecure key replacement [GH-13219] 
+- core: Extract box files as sparse files [GH-13252]
+- keys: Add ed25519 insecure private key [GH-13219]
+- util/downloader: Perform best effort revocation checks on Windows [GH-13214]
+- util/keypair: Add support for generating ed25519 key pairs [GH-13219]
+
+BUG FIXES:
+
+- core: Fix extension installation path [GH-13215]
+- provider/virtualbox: Fix ipv6 static network configuration [GH-13241]
+
+VAGRANT-GO:
+
+- Add basic support for HCL based config [GH-13257]
+
+## 2.3.7 (June 15, 2023)
+
+IMPROVEMENTS:
+
+- command/ssh: Enable deprecated key types and algorithms [GH-13179]
+- core: Update user error message on failed extension installs [GH-13207]
+- core: Support loading legacy providers in OpenSSL 3 [GH-13178]
+- provisioner/salt: Verify bootstrap-salt download [GH-13166]
+
+BUG FIXES:
+
+- communicator/ssh: Remove keyboard-interactive auth method [GH-13194]
+- provisioner/salt: Fix usage on Windows guests [GH-13086]
+
+VAGRANT-GO:
+
+- Update data layer implementation [GH-12904]
+- Update dependencies [GH-13201]
+
+## 2.3.6 (May 19, 2023)
+
+BUG FIXES:
+
+- command/serve: Isolate proto constants to file for auto-loading [GH-13165]
+- core/util: Unlock file prior to deletion [GH-13159]
+- provider/docker: Attempt using docker command for bridge ip [GH-13153]
+- provider/virtualbox: Update preferred locale values for driver [GH-13160]
+
+## 2.3.5 (May 15, 2023)
+
+BUG FIXES:
+
+- communicator/ssh: Use netssh builtin keep alive functionality [GH-13069]
+- communicator/ssh: Update connection settings when using a password to connect ssh [GH-13052]
+- core:  Add a file mutex when downloading box files [GH-13057]
+- guest/arch: Support differentiating between Artix and Arch Linux [GH-13055]
+- host/windows: Get state of Windows feature "Microsoft-Hyper-V-Hypervisor" [GH-11933]
+- provider/docker: Ignore inactive docker containers when assigning ports [GH-13146]
+- provider/docker: Sync folders before preparing nfs settings [GH-13149]
+- provider/virtualbox: De-duplicate machine port forward info [GH-13056]
+- provider/virtualbox:  Remove check for hyperv being enabled when verifying virtualbox is usable on windows [GH-13090]
+- provider/virtualbox: Validate LANG value when possible [GH-13150]
+- provider/hyperv: Check for hyper-v feature "EnhancedSessionTransportType" [GH-12280]
+- provisioner/ansible: Fix installing Ansible provisioner with version and pip [GH-13054]
+- synced_folders/rsync: allow rsync-auto to also ignore relative paths [GH-13066]
+
+NOTE: Vagrant installer packages were updated to Ruby 3
+
+## 2.3.4 (December 9, 2022)
+
+IMPROVEMENTS:
+
+- host/darwin: Isolate loading incompatible libraries to support EOL platforms [GH-13022]
+- provider/virtualbox: Detect network type when not provided [GH-13024]
+
+BUG FIXES:
+
+- host/windows: Add fix for Powershell 7.3.0 [GH-13006]
+- provider/virtualbox: Adjust hostnet DHCP configuration, ignore invalid devices [GH-13004]
+- provisioner/ansible: Fix install package names on older debian (and derivatives) versions [GH-13017]
+
+## 2.3.3 (November 15, 2022) 
+
+IMPROVEMENTS:
+
+- core: Bump net-ssh dependency to 7.0 and remove patches [GH-12979]
+- synced_folders/rsync: Include ssh `extra_args` value [GH-12973]
+
+BUG FIXES:
+
+- command/serve: Force root level namespace for Google constant [GH-12989]
+- guest/solaris: Fix insecure key authorized keys removal [GH-12740]
+- provider/virtualbox: Fix `:private_network` support for VirtualBox 7 on macOS [GH-12983]
+- provider/virtualbox: Prevent localization of command output [GH-12994]
+- provisioner/ansible: Update setup packages in debian capability [GH-12832]
 
 ## 2.3.2 (October 18, 2022)
 

@@ -1,6 +1,9 @@
-require "log4r"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require 'vagrant/util/platform'
+Vagrant.require "log4r"
+
+Vagrant.require 'vagrant/util/platform'
 
 require_relative "mixin_synced_folders"
 

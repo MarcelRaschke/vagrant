@@ -70,3 +70,13 @@ __debug_bin
 # solargraph (ruby lsp) & rubocop
 .solargraph.yml
 .rubocop.yml
+
+# Ignore generated binaries
+bin/vagrant-go*
+
+# extension
+tmp*
+lib/vagrant/vagrant_ssl.so
+
+# direnv directory
+.direnv

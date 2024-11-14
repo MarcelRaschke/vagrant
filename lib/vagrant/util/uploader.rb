@@ -1,10 +1,13 @@
-require "uri"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require "log4r"
-require "vagrant/util/busy"
-require "vagrant/util/platform"
-require "vagrant/util/subprocess"
-require "vagrant/util/curl_helper"
+Vagrant.require "uri"
+
+Vagrant.require "log4r"
+Vagrant.require "vagrant/util/busy"
+Vagrant.require "vagrant/util/platform"
+Vagrant.require "vagrant/util/subprocess"
+Vagrant.require "vagrant/util/curl_helper"
 
 module Vagrant
   module Util

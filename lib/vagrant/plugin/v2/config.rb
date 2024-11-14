@@ -1,4 +1,7 @@
-require "set"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "set"
 
 module Vagrant
   module Plugin
@@ -14,11 +17,6 @@ module Vagrant
         # method below will "just work" in many cases.
 
         UNSET_VALUE = :__UNSET__VALUE__
-
-        if Vagrant.server_mode?
-          GENERAL_CONFIG_CLS = Hashicorp::Vagrant::Sdk::Vagrantfile::GeneralConfig
-          SYMBOL_PROTO = Hashicorp::Vagrant::Sdk::Args::Symbol
-        end
 
         # This is called as a last-minute hook that allows the configuration
         # object to finalize itself before it will be put into use. This is

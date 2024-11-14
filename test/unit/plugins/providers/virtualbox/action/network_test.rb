@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 require_relative "../base"
 
 require "vagrant/util/platform"
@@ -58,6 +61,28 @@ describe VagrantPlugins::ProviderVirtualBox::Action::Network do
     it "should validate the IP" do
       expect(subject).to receive(:validate_hostonly_ip!)
       subject.hostonly_config(options)
+    end
+
+    context "when address is ipv6" do
+      let(:address) { "::1" }
+
+      context "when type is static6" do
+        let(:type) { :static6 }
+
+        it "should have a static6 type" do
+          result = subject.hostonly_config(options)
+          expect(result[:type]).to eq(:static6)
+        end
+      end
+
+      context "when type is static" do
+        let(:type) { :static }
+
+        it "should have static6 type" do
+          result = subject.hostonly_config(options)
+          expect(result[:type]).to eq(:static6)
+        end
+      end
     end
   end
 
@@ -231,10 +256,10 @@ describe VagrantPlugins::ProviderVirtualBox::Action::Network do
 
     subject.call(env)
 
-    expect(driver).to have_received(:create_host_only_network).with({
+    expect(driver).to have_received(:create_host_only_network).with(hash_including({
       adapter_ip: interface_ip,
       netmask: 64,
-    })
+    }))
 
     expect(guest).to have_received(:capability).with(:configure_networks, [{
       type: :static6,
@@ -308,10 +333,10 @@ describe VagrantPlugins::ProviderVirtualBox::Action::Network do
 
       subject.call(env)
 
-      expect(driver).to have_received(:create_host_only_network).with({
+      expect(driver).to have_received(:create_host_only_network).with(hash_including({
         adapter_ip: '192.168.56.1',
         netmask: '255.255.255.0',
-      })
+      }))
 
       expect(driver).to have_received(:create_dhcp_server).with('vboxnet0', {
         adapter_ip: "192.168.56.1",
@@ -398,6 +423,33 @@ describe VagrantPlugins::ProviderVirtualBox::Action::Network do
         machine.config.vm.network 'private_network', **args
         expect { subject.call(env) }.
           to raise_error(Vagrant::Errors::NetworkAddressInvalid)
+      end
+    end
+  end
+
+  context "without type set" do
+    before { allow(subject).to receive(:hostonly_adapter).and_return({}) }
+
+    [
+      { ip: "192.168.63.5" },
+      { ip: "192.168.63.5", netmask: "255.255.255.0" },
+      { ip: "dead:beef::100" },
+      { ip: "dead:beef::100", netmask: 96 },
+    ].each do |args|
+      it "sets the type automatically" do
+        machine.config.vm.network "private_network", **args
+        expect(subject).to receive(:hostonly_config) do |config|
+          expect(config).to have_key(:type)
+          addr = IPAddr.new(args[:ip])
+          if addr.ipv4?
+            expect(config[:type]).to eq(:static)
+          else
+            expect(config[:type]).to eq(:static6)
+          end
+          config
+        end
+        subject.call(env)
+
       end
     end
   end

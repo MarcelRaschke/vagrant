@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 en:
   vagrant:
     alert: |-
@@ -425,7 +428,7 @@ en:
           Please use with caution, as some of the features may not be fully
           functional yet.
         features: |-
-          You have requested to enabled the experimental flag with the following features:
+          You have requested to enable the experimental flag with the following features:
 
           Features:  %{features}
 
@@ -656,6 +659,13 @@ en:
         the box are shown below:
 
         %{providers}
+      box_not_found_with_provider_architecture: |-
+        The box '%{name}' for the provider '%{provider}' isn't installed
+        for the architecture '%{architecture}'. Please double-check and
+        try again. The installed architectures for the box are shown
+        below:
+
+        %{architectures}
       box_not_found_with_provider_and_version: |-
         The box '%{name}' (v%{version}) with provider '%{provider}'
         could not be found. Please double check and try again. You
@@ -666,35 +676,51 @@ en:
         Provider expected: %{expected}
         Provider of box: %{actual}
       box_remove_multi_provider: |-
-        You requested to remove the box '%{name}'. This box has
-        multiple providers. You must explicitly select a single
-        provider to remove with `--provider`.
+        You requested to remove the box '%{name}' version '%{version}'. This
+        box has multiple providers. You must explicitly select a single provider to
+        remove with `--provider` or specify the `--all-providers` flag to remove
+        all providers.
 
         Available providers: %{providers}
       box_remove_multi_version: |-
-        You requested to remove the box '%{name}' with provider
-        '%{provider}'. This box has multiple versions. You must
-        explicitly specify which version you want to remove with
-        the `--box-version` flag or specify the `--all` flag to remove all
-        versions. The available versions for this box are:
+        You requested to remove the box '%{name}'. This box has multiple
+        versions. You must explicitly specify which version you want to
+        remove with the `--box-version` flag or specify the `--all` flag
+        to remove all versions. The available versions for this box are:
 
         %{versions}
       box_remove_not_found: |-
         The box you requested to be removed could not be found. No
         boxes named '%{name}' could be found.
       box_remove_provider_not_found: |-
-        You requested to remove the box '%{name}' with provider
-        '%{provider}'. The box '%{name}' exists but not with
-        the provider specified. Please double-check and try again.
+        You requested to remove the box '%{name}' version '%{version}'
+        with provider '%{provider}'. The box '%{name}' exists but not
+        with the provider specified. Please double-check and try again.
 
         The providers for this are: %{providers}
       box_remove_version_not_found: |-
-        You requested to remove the box '%{name}' version '%{version}' with
-        provider '%{provider}', but that specific version of the box is
-        not installed. Please double-check and try again. The available versions
-        for this box are:
+        You requested to remove the box '%{name}' version '%{version}',
+        but that specific version of the box is not installed. Please
+        double-check and try again. The available versions for this box
+        are:
 
         %{versions}
+      box_remove_multi_architecture: |-
+        You requested to remove the box '%{name}' version '%{version}'
+        with provider '%{provider}'. This box has multiple architectures.
+        You must explicitly select a single architecture to remove with
+        `--architecture` or specify the `--all-architectures` flag to
+        remove all architectures. The available architectures for this
+        box are:
+
+        %{architectures}
+      box_remove_architecture_not_found: |-
+        You requested to remove the box '%{name}' version '%{version}'
+        with provider '%{provider}' and architecture '%{architecture}' but
+        that specific architecture is not installed. Please double-check
+        and try again. The available architectures are:
+
+        %{architectures}
       box_server_not_set: |-
         A URL to a Vagrant Cloud server is not set, so boxes cannot be added with a
         shorthand ("mitchellh/precise64") format. You may also be seeing this
@@ -707,9 +733,15 @@ en:
       box_update_multi_provider: |-
         You requested to update the box '%{name}'. This box has
         multiple providers. You must explicitly select a single
-        provider to remove with `--provider`.
+        provider to update with `--provider`.
 
         Available providers: %{providers}
+      box_update_multi_architecture: |-
+        You requested to update the box '%{name}' (v%{version}) with provider
+        '%{provider}'. This box has multiple architectures. You must explicitly
+        select a single architecture to update with `--architecture`.
+
+        Available architectures: %{architectures}
       box_update_no_box: |-
         Box '%{name}' not installed, can't check for updates.
       box_update_no_metadata: |-
@@ -895,6 +927,13 @@ en:
         support.
 
         State file path: %{state_file}
+      download_already_in_progress_error: |-
+        Download to global Vagrant location already in progress. This
+        may be caused by other Vagrant processes attempting to download
+        a file to the same location.
+
+        Download path: %{dest_path}
+        Lock file path: %{lock_file_path}
       downloader_error: |-
         An error occurred while downloading the remote file. The error
         message, if any, is reproduced below. Please fix this error and try
@@ -1273,12 +1312,19 @@ en:
         again.
       plugin_missing_library: |-
         Vagrant failed to install the requested plugin because it depends
-        on a library which is not currently installed on this system. The
-        following library is required by the '%{name}' plugin:
+        on development files for a library which is not currently installed
+        on this system. The following library is required by the '%{name}'
+        plugin:
 
           %{library}
 
-        Please install the library and then run the command again.
+        If a package manager is used on this system, please install the development
+        package for the library. The name of the package will be similar to:
+
+          %{library}-dev or %{library}-devel
+
+        After the library and development files have been installed, please
+        run the command again.
       plugin_missing_ruby_dev: |-
         Vagrant failed to install the requested plugin because the Ruby header
         files could not be found. Install the ruby development package for your
@@ -1575,6 +1621,14 @@ en:
         sometimes keys in your ssh-agent can interfere with this as well,
         so verify the keys are valid there in addition to standard
         file paths.
+      ssh_key_type_not_supported_by_server: |-
+        The private key you are attempting to generate is not supported by
+        the guest SSH server. Please use one of the available key types defined
+        below that is supported by the guest SSH server.
+
+        Requested: %{requested_key_type}
+        Available: %{available_key_types}
+
       ssh_not_ready: |-
         The provider for this Vagrant-managed machine is reporting that it
         is not yet ready for SSH. Depending on your provider this can carry
@@ -1668,6 +1722,11 @@ en:
       uploader_interrupted: |-
         The upload was interrupted by an external signal. It did not
         complete.
+      vagrant_locked: |-
+        The requested Vagrant action is locked. This may be caused
+        by other Vagrant processes attempting to do a similar action.
+
+        Lock file path: %{lock_file_path}
       vagrantfile_exists: |-
         `Vagrantfile` already exists in this directory. Remove it before
         running `vagrant init`.
@@ -1794,6 +1853,10 @@ en:
         VirtualBox is complaining that the installation is incomplete. Please
         run `VBoxManage --version` to see the error message which should contain
         instructions on how to fix this error.
+      virtualbox_machine_folder_not_found: |-
+        Vagrant failed to determine the machine folder on this host from
+        the VirtualBox system information. Try running the command again.
+        If this error persists, please report this error as a bug.
       virtualbox_mount_failed: |-
         Vagrant was unable to mount VirtualBox shared folders. This is usually
         because the filesystem "vboxsf" is not available. This filesystem is
@@ -2010,6 +2073,8 @@ en:
           `%{given}` type which cannot be converted to an Integer type.
         connect_timeout_invalid_value: |-
           The `connect_timeout` key only accepts values greater than 1 (received `%{given}`)
+        connect_invalid_key_type: |-
+          Invalid SSH key type set ('%{given}'). Supported types: %{supported}
       triggers:
         bad_trigger_type: |-
           The type '%{type}' defined for trigger '%{trigger}' is not valid. Must be one of the following types: '%{types}'
@@ -2095,7 +2160,7 @@ en:
         name_invalid: |-
           The sub-VM name '%{name}' is invalid. Please don't use special characters.
         network_ip_ends_in_one: |-
-          You assigned a static IP ending in ".1" to this machine.
+          You assigned a static IP ending in ".1" or ":1" to this machine.
           This is very often used by the router and can cause the
           network to not work properly. If the network doesn't work
           properly, try changing this IP.
@@ -2162,10 +2227,10 @@ en:
       box:
         no_installed_boxes: "There are no installed boxes! Use `vagrant box add` to add some."
         remove_in_use_query: |-
-          Box '%{name}' (v%{version}) with provider '%{provider}' appears
-          to still be in use by at least one Vagrant environment. Removing
-          the box could corrupt the environment. We recommend destroying
-          these environments first:
+          Box '%{name}' (v%{version}) with provider '%{provider}' and
+          architectures '%{architecture}' appears to still be in use by
+          at least one Vagrant environment. Removing the box could corrupt
+          the environment. We recommend destroying these environments first:
 
           %{users}
 
@@ -2596,6 +2661,7 @@ en:
           exporting: Exporting NFS shared folders...
           installing: "Installing NFS client..."
           mounting: Mounting NFS shared folders...
+          mounting_entry: "%{hostpath} => %{guestpath}"
           v4_with_udp_warning: |-
 
             WARNING: Invalid NFS settings detected!
@@ -2636,7 +2702,7 @@ en:
         share_folders:
           creating: Creating shared folders metadata...
           mounting: Mounting shared folders...
-          mounting_entry: "%{guestpath} => %{hostpath}"
+          mounting_entry: "%{hostpath} => %{guestpath}"
           nomount_entry: "Automounting disabled: %{hostpath}"
         set_default_nic_type:
           e1000_warning: |-
@@ -3061,6 +3127,8 @@ en:
           You must set `python_version` as an integer or string that represents an integer.
         version_type_missing: |-
           You must set the option `install_type` when specifying a `version`.
+        salt_invalid_shasum_error: |-
+          The bootstrap-salt script downloaded from '%{source}' couldn't be verified. Expected SHA256 '%{expected_sha}', but computed '%{computed_sha}'
 
     pushes:
       file:

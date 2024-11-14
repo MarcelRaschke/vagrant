@@ -1,9 +1,11 @@
-require 'fileutils'
-require "pathname"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require 'vagrant/util/safe_chdir'
-require 'vagrant/util/subprocess'
-require 'vagrant/util/presence'
+Vagrant.require 'fileutils'
+Vagrant.require "pathname"
+Vagrant.require 'vagrant/util/safe_chdir'
+Vagrant.require 'vagrant/util/subprocess'
+Vagrant.require 'vagrant/util/presence'
 
 module Vagrant
   module Action

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package state
 
 import (
@@ -5,10 +8,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-memdb"
-	"github.com/hashicorp/vagrant-plugin-sdk/proto/vagrant_plugin_sdk"
-	"github.com/stretchr/testify/require"
-
 	"github.com/hashicorp/vagrant/internal/server/proto/vagrant_server"
+	"github.com/stretchr/testify/require"
 )
 
 func TestConfig(t *testing.T) {
@@ -17,13 +18,12 @@ func TestConfig(t *testing.T) {
 
 		s := TestState(t)
 		defer s.Close()
+		projRef := TestProjectProto(t, s)
 
 		// Create a build
 		require.NoError(s.ConfigSet(&vagrant_server.ConfigVar{
 			Scope: &vagrant_server.ConfigVar_Project{
-				Project: &vagrant_plugin_sdk.Ref_Project{
-					ResourceId: "foo",
-				},
+				Project: projRef,
 			},
 
 			Name:  "foo",
@@ -34,7 +34,7 @@ func TestConfig(t *testing.T) {
 			// Get it exactly
 			vs, err := s.ConfigGet(&vagrant_server.ConfigGetRequest{
 				Scope: &vagrant_server.ConfigGetRequest_Project{
-					Project: &vagrant_plugin_sdk.Ref_Project{ResourceId: "foo"},
+					Project: projRef,
 				},
 
 				Prefix: "foo",
@@ -47,7 +47,7 @@ func TestConfig(t *testing.T) {
 			// Get it via a prefix match
 			vs, err := s.ConfigGet(&vagrant_server.ConfigGetRequest{
 				Scope: &vagrant_server.ConfigGetRequest_Project{
-					Project: &vagrant_plugin_sdk.Ref_Project{ResourceId: "foo"},
+					Project: projRef,
 				},
 
 				Prefix: "",
@@ -60,7 +60,7 @@ func TestConfig(t *testing.T) {
 			// non-matching prefix
 			vs, err := s.ConfigGet(&vagrant_server.ConfigGetRequest{
 				Scope: &vagrant_server.ConfigGetRequest_Project{
-					Project: &vagrant_plugin_sdk.Ref_Project{ResourceId: "foo"},
+					Project: projRef,
 				},
 
 				Prefix: "bar",
@@ -76,13 +76,13 @@ func TestConfig(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
+		projRef := TestProjectProto(t, s)
+
 		// Create a build
 		require.NoError(s.ConfigSet(
 			&vagrant_server.ConfigVar{
 				Scope: &vagrant_server.ConfigVar_Project{
-					Project: &vagrant_plugin_sdk.Ref_Project{
-						ResourceId: "foo",
-					},
+					Project: projRef,
 				},
 
 				Name:  "global",
@@ -90,9 +90,7 @@ func TestConfig(t *testing.T) {
 			},
 			&vagrant_server.ConfigVar{
 				Scope: &vagrant_server.ConfigVar_Project{
-					Project: &vagrant_plugin_sdk.Ref_Project{
-						ResourceId: "foo",
-					},
+					Project: projRef,
 				},
 
 				Name:  "hello",
@@ -104,9 +102,7 @@ func TestConfig(t *testing.T) {
 			// Get our merged variables
 			vs, err := s.ConfigGet(&vagrant_server.ConfigGetRequest{
 				Scope: &vagrant_server.ConfigGetRequest_Project{
-					Project: &vagrant_plugin_sdk.Ref_Project{
-						ResourceId: "foo",
-					},
+					Project: projRef,
 				},
 			})
 			require.NoError(err)
@@ -122,9 +118,7 @@ func TestConfig(t *testing.T) {
 			// Get project scoped variables. This should return everything.
 			vs, err := s.ConfigGet(&vagrant_server.ConfigGetRequest{
 				Scope: &vagrant_server.ConfigGetRequest_Project{
-					Project: &vagrant_plugin_sdk.Ref_Project{
-						ResourceId: "foo",
-					},
+					Project: projRef,
 				},
 			})
 			require.NoError(err)
@@ -138,12 +132,12 @@ func TestConfig(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
+		projRef := TestProjectProto(t, s)
+
 		// Create a var
 		require.NoError(s.ConfigSet(&vagrant_server.ConfigVar{
 			Scope: &vagrant_server.ConfigVar_Project{
-				Project: &vagrant_plugin_sdk.Ref_Project{
-					ResourceId: "foo",
-				},
+				Project: projRef,
 			},
 
 			Name:  "foo",
@@ -154,7 +148,7 @@ func TestConfig(t *testing.T) {
 			// Get it exactly
 			vs, err := s.ConfigGet(&vagrant_server.ConfigGetRequest{
 				Scope: &vagrant_server.ConfigGetRequest_Project{
-					Project: &vagrant_plugin_sdk.Ref_Project{ResourceId: "foo"},
+					Project: projRef,
 				},
 
 				Prefix: "foo",
@@ -166,9 +160,7 @@ func TestConfig(t *testing.T) {
 		// Delete it
 		require.NoError(s.ConfigSet(&vagrant_server.ConfigVar{
 			Scope: &vagrant_server.ConfigVar_Project{
-				Project: &vagrant_plugin_sdk.Ref_Project{
-					ResourceId: "foo",
-				},
+				Project: projRef,
 			},
 
 			Name: "foo",
@@ -179,7 +171,7 @@ func TestConfig(t *testing.T) {
 			// Get it exactly
 			vs, err := s.ConfigGet(&vagrant_server.ConfigGetRequest{
 				Scope: &vagrant_server.ConfigGetRequest_Project{
-					Project: &vagrant_plugin_sdk.Ref_Project{ResourceId: "foo"},
+					Project: projRef,
 				},
 
 				Prefix: "foo",
@@ -194,6 +186,8 @@ func TestConfig(t *testing.T) {
 
 		s := TestState(t)
 		defer s.Close()
+
+		projRef := TestProjectProto(t, s)
 
 		// Create the config
 		require.NoError(s.ConfigSet(&vagrant_server.ConfigVar{
@@ -212,9 +206,7 @@ func TestConfig(t *testing.T) {
 		// Create a var that shouldn't match
 		require.NoError(s.ConfigSet(&vagrant_server.ConfigVar{
 			Scope: &vagrant_server.ConfigVar_Project{
-				Project: &vagrant_plugin_sdk.Ref_Project{
-					ResourceId: "foo",
-				},
+				Project: projRef,
 			},
 
 			Name:  "bar",
@@ -267,6 +259,8 @@ func TestConfig(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
+		projRef := TestProjectProto(t, s)
+
 		// Create the config
 		require.NoError(s.ConfigSet(&vagrant_server.ConfigVar{
 			Scope: &vagrant_server.ConfigVar_Runner{
@@ -286,9 +280,7 @@ func TestConfig(t *testing.T) {
 		// Create a var that shouldn't match
 		require.NoError(s.ConfigSet(&vagrant_server.ConfigVar{
 			Scope: &vagrant_server.ConfigVar_Project{
-				Project: &vagrant_plugin_sdk.Ref_Project{
-					ResourceId: "foo",
-				},
+				Project: projRef,
 			},
 
 			Name:  "bar",
@@ -380,12 +372,14 @@ func TestConfigWatch(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
+		projRef := TestProjectProto(t, s)
+
 		ws := memdb.NewWatchSet()
 
 		// Get it with watch
 		vs, err := s.ConfigGetWatch(&vagrant_server.ConfigGetRequest{
 			Scope: &vagrant_server.ConfigGetRequest_Project{
-				Project: &vagrant_plugin_sdk.Ref_Project{ResourceId: "foo"},
+				Project: projRef,
 			},
 
 			Prefix: "foo",
@@ -399,9 +393,7 @@ func TestConfigWatch(t *testing.T) {
 		// Create a config
 		require.NoError(s.ConfigSet(&vagrant_server.ConfigVar{
 			Scope: &vagrant_server.ConfigVar_Project{
-				Project: &vagrant_plugin_sdk.Ref_Project{
-					ResourceId: "foo",
-				},
+				Project: projRef,
 			},
 
 			Name:  "foo",

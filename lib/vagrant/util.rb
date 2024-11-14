@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 module Vagrant
   module Util
     module Remote
@@ -20,6 +23,7 @@ module Vagrant
     autoload :Experimental,              'vagrant/util/experimental'
     autoload :FileChecksum,              'vagrant/util/file_checksum'
     autoload :FileMode,                  'vagrant/util/file_mode'
+    autoload :FileMutex,                 'vagrant/util/file_mutex'
     autoload :GuestHosts,                'vagrant/util/guest_hosts'
     autoload :GuestInspection,           'vagrant/util/guest_inspection'
     autoload :HashWithIndifferentAccess, 'vagrant/util/hash_with_indifferent_access'
@@ -32,7 +36,7 @@ module Vagrant
     autoload :IO,                        'vagrant/util/io'
     autoload :IPV4Interfaces,            'vagrant/util/ipv4_interfaces'
     autoload :IsPortOpen,                'vagrant/util/is_port_open'
-    autoload :KeyPair,                   'vagrant/util/key_pair'
+    autoload :Keypair,                   'vagrant/util/keypair'
     autoload :LineBuffer,                'vagrant/util/line_buffer'
     autoload :LineEndingHelpers,         'vagrant/util/line_ending_helpers'
     autoload :LoggingFormatter,          'vagrant/util/logging_formatter'
@@ -42,7 +46,7 @@ module Vagrant
     autoload :Numeric,                   'vagrant/util/numeric'
     autoload :Platform,                  'vagrant/util/platform'
     autoload :Powershell,                'vagrant/util/powershell'
-    autoload :Presence,                   'vagrant/util/presence'
+    autoload :Presence,                  'vagrant/util/presence'
     autoload :Retryable,                 'vagrant/util/retryable'
     autoload :SafeChdir,                 'vagrant/util/safe_chdir'
     autoload :SafeEnv,                   'vagrant/util/safe_env'

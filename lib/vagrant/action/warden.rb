@@ -1,5 +1,8 @@
-require "log4r"
-require 'vagrant/util/experimental'
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "log4r"
+Vagrant.require 'vagrant/util/experimental'
 
 module Vagrant
   module Action
@@ -17,19 +20,6 @@ module Vagrant
       attr_accessor :actions, :stack
 
       def initialize(actions, env)
-        if Vagrant::Util::Experimental.feature_enabled?("typed_triggers")
-          if env[:trigger_env]
-            @env = env[:trigger_env]
-          else
-            @env = env[:env]
-          end
-
-          machine = env[:machine]
-          machine_name = machine.name if machine
-          ui = Vagrant::UI::Prefixed.new(@env.ui, "vagrant")
-          @triggers = Vagrant::Plugin::V2::Trigger.new(@env, @env.vagrantfile.config.trigger, machine, ui)
-        end
-
         @stack      = []
         @actions    = actions.map { |m| finalize_action(m, env) }.flatten
         @logger     = Log4r::Logger.new("vagrant::action::warden")

@@ -1,8 +1,11 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 # Patch things to produce proto messages
-require "pathname"
-require "securerandom"
-require "google/protobuf/wrappers_pb"
-require "google/protobuf/well_known_types"
+Vagrant.require "pathname"
+Vagrant.require "securerandom"
+Vagrant.require "google/protobuf/wrappers_pb"
+Vagrant.require "google/protobuf/well_known_types"
 
 PROTO_LOGGER = Log4r::Logger.new("vagrant::protologger")
 
@@ -12,10 +15,20 @@ class Object
     Hashicorp::Vagrant::Sdk::Args::Class.new(name: name)
   end
 
+  # simple stub so non-proto objects won't
+  # error if conversion is attempted
+  def to_ruby
+    self
+  end
+
   def to_any
-    pro = to_proto
+    source_proto = if !self.class.ancestors.include?(Google::Protobuf::MessageExts)
+                     to_proto
+                   else
+                     self
+                   end
     begin
-      Google::Protobuf::Any.pack(pro)
+      Google::Protobuf::Any.pack(source_proto)
     rescue
       PROTO_LOGGER.warn("failed to any this type: #{self.class} value: #{self}")
       raise
@@ -432,6 +445,12 @@ class Hashicorp::Vagrant::Sdk::Args::Host
   end
 end
 
+class Hashicorp::Vagrant::Sdk::Args::MetadataSet
+  def to_ruby
+    {}
+  end
+end
+
 class Hashicorp::Vagrant::Sdk::Args::NamedCapability
   def to_ruby
     capability.to_s.to_sym
@@ -566,7 +585,7 @@ class Hashicorp::Vagrant::Sdk::Args::Target
       VagrantPlugins::CommandServe.cache.registered?(cid)
 
     client = _vagrant_load_client(VagrantPlugins::CommandServe::Client::Target)
-    env = client.project.to_ruby
+    env = client.environment.to_ruby
     machine = env.machine(client.name.to_sym, client.provider_name.to_sym)
     VagrantPlugins::CommandServe.cache.register(cid, machine)
     machine
@@ -589,7 +608,7 @@ end
 class Hashicorp::Vagrant::Sdk::Args::Target::Machine::State
   def to_ruby
     Vagrant::MachineState.new(
-      m.id.to_sym, m.short_description, m.long_description
+      id.to_sym, short_description, long_description
     )
   end
 end

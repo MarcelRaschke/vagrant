@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package state
 
 import (
@@ -11,9 +14,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/hashicorp/go-memdb"
-	"github.com/hashicorp/vagrant-plugin-sdk/proto/vagrant_plugin_sdk"
+	//	"github.com/hashicorp/vagrant-plugin-sdk/proto/vagrant_plugin_sdk"
 	"github.com/hashicorp/vagrant/internal/server/proto/vagrant_server"
-	serverptypes "github.com/hashicorp/vagrant/internal/server/ptypes"
 )
 
 func TestJobAssign(t *testing.T) {
@@ -23,9 +25,15 @@ func TestJobAssign(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
+
 		// Create a build
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 		})))
 
 		// Assign it, we should get this build
@@ -53,11 +61,14 @@ func TestJobAssign(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
+
 		// Create a build
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
-			Project: &vagrant_plugin_sdk.Ref_Project{
-				ResourceId: "project1",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
 			},
 		})))
 
@@ -90,10 +101,10 @@ func TestJobAssign(t *testing.T) {
 			}
 
 			// Insert another job
-			require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+			require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 				Id: "B",
-				Project: &vagrant_plugin_sdk.Ref_Project{
-					ResourceId: "project2",
+				Scope: &vagrant_server.Job_Project{
+					Project: projRef,
 				},
 			})))
 
@@ -268,13 +279,22 @@ func TestJobAssign(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
+
 		// Create two builds slightly apart
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 		})))
 		time.Sleep(1 * time.Millisecond)
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "B",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 		})))
 
 		// Assign it, we should get build A then B
@@ -304,9 +324,16 @@ func TestJobAssign(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_B"})
+
 		// Create a build by ID
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 			TargetRunner: &vagrant_server.Ref_Runner{
 				Target: &vagrant_server.Ref_Runner_Id{
 					Id: &vagrant_server.Ref_RunnerId{
@@ -316,11 +343,11 @@ func TestJobAssign(t *testing.T) {
 			},
 		})))
 		time.Sleep(1 * time.Millisecond)
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "B",
 		})))
 		time.Sleep(1 * time.Millisecond)
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "C",
 		})))
 
@@ -354,9 +381,16 @@ func TestJobAssign(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_B"})
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
+
 		// Create a build by ID
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 			TargetRunner: &vagrant_server.Ref_Runner{
 				Target: &vagrant_server.Ref_Runner_Id{
 					Id: &vagrant_server.Ref_RunnerId{
@@ -393,12 +427,17 @@ func TestJobAssign(t *testing.T) {
 
 		s := TestState(t)
 		defer s.Close()
+		projRef := TestProjectProto(t, s)
 
 		r := &vagrant_server.Runner{Id: "R_A", ByIdOnly: true}
+		testRunnerProto(t, s, r)
 
 		// Create a build
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 		})))
 
 		// Should block because none direct assign
@@ -410,8 +449,11 @@ func TestJobAssign(t *testing.T) {
 		require.Equal(ctx.Err(), err)
 
 		// Create a target
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "B",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 			TargetRunner: &vagrant_server.Ref_Runner{
 				Target: &vagrant_server.Ref_Runner_Id{
 					Id: &vagrant_server.Ref_RunnerId{
@@ -436,9 +478,15 @@ func TestJobAck(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
+
 		// Create a build
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 		})))
 
 		// Assign it, we should get this build
@@ -466,9 +514,15 @@ func TestJobAck(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
+
 		// Create a build
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 		})))
 
 		// Assign it, we should get this build
@@ -501,9 +555,15 @@ func TestJobAck(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
+
 		// Create a build
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 		})))
 
 		// Assign it, we should get this build
@@ -533,9 +593,15 @@ func TestJobComplete(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
+
 		// Create a build
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 		})))
 
 		// Assign it, we should get this build
@@ -550,7 +616,7 @@ func TestJobComplete(t *testing.T) {
 
 		// Complete it
 		require.NoError(s.JobComplete(job.Id, &vagrant_server.Job_Result{
-			Run: &vagrant_server.Job_RunResult{},
+			Run: &vagrant_server.Job_CommandResult{},
 		}, nil))
 
 		// Verify it is changed
@@ -568,9 +634,15 @@ func TestJobComplete(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
+
 		// Create a build
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 		})))
 
 		// Assign it, we should get this build
@@ -606,9 +678,14 @@ func TestJobIsAssignable(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
+		projRef := TestProjectProto(t, s)
+
 		// Create a build
-		result, err := s.JobIsAssignable(ctx, serverptypes.TestJobNew(t, &vagrant_server.Job{
+		result, err := s.JobIsAssignable(ctx, TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 		}))
 		require.NoError(err)
 		require.False(result)
@@ -620,13 +697,15 @@ func TestJobIsAssignable(t *testing.T) {
 
 		s := TestState(t)
 		defer s.Close()
-
-		// Register a runner
-		require.NoError(s.RunnerCreate(serverptypes.TestRunner(t, nil)))
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
 
 		// Should be assignable
-		result, err := s.JobIsAssignable(ctx, serverptypes.TestJobNew(t, &vagrant_server.Job{
+		result, err := s.JobIsAssignable(ctx, TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 			TargetRunner: &vagrant_server.Ref_Runner{
 				Target: &vagrant_server.Ref_Runner_Any{
 					Any: &vagrant_server.Ref_RunnerAny{},
@@ -643,15 +722,15 @@ func TestJobIsAssignable(t *testing.T) {
 
 		s := TestState(t)
 		defer s.Close()
-
-		// Register a runner
-		require.NoError(s.RunnerCreate(serverptypes.TestRunner(t, &vagrant_server.Runner{
-			ByIdOnly: true,
-		})))
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A", ByIdOnly: true})
 
 		// Should be assignable
-		result, err := s.JobIsAssignable(ctx, serverptypes.TestJobNew(t, &vagrant_server.Job{
+		result, err := s.JobIsAssignable(ctx, TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 			TargetRunner: &vagrant_server.Ref_Runner{
 				Target: &vagrant_server.Ref_Runner_Any{
 					Any: &vagrant_server.Ref_RunnerAny{},
@@ -668,13 +747,15 @@ func TestJobIsAssignable(t *testing.T) {
 
 		s := TestState(t)
 		defer s.Close()
-
-		// Register a runner
-		require.NoError(s.RunnerCreate(serverptypes.TestRunner(t, nil)))
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_B"})
 
 		// Should be assignable
-		result, err := s.JobIsAssignable(ctx, serverptypes.TestJobNew(t, &vagrant_server.Job{
+		result, err := s.JobIsAssignable(ctx, TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 			TargetRunner: &vagrant_server.Ref_Runner{
 				Target: &vagrant_server.Ref_Runner_Id{
 					Id: &vagrant_server.Ref_RunnerId{
@@ -693,18 +774,19 @@ func TestJobIsAssignable(t *testing.T) {
 
 		s := TestState(t)
 		defer s.Close()
-
-		// Register a runner
-		runner := serverptypes.TestRunner(t, nil)
-		require.NoError(s.RunnerCreate(runner))
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
 
 		// Should be assignable
-		result, err := s.JobIsAssignable(ctx, serverptypes.TestJobNew(t, &vagrant_server.Job{
+		result, err := s.JobIsAssignable(ctx, TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 			TargetRunner: &vagrant_server.Ref_Runner{
 				Target: &vagrant_server.Ref_Runner_Id{
 					Id: &vagrant_server.Ref_RunnerId{
-						Id: runner.Id,
+						Id: "R_A",
 					},
 				},
 			},
@@ -720,10 +802,14 @@ func TestJobCancel(t *testing.T) {
 
 		s := TestState(t)
 		defer s.Close()
+		projRef := TestProjectProto(t, s)
 
 		// Create a build
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 		})))
 
 		// Cancel it
@@ -742,10 +828,15 @@ func TestJobCancel(t *testing.T) {
 
 		s := TestState(t)
 		defer s.Close()
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
 
 		// Create a build
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 		})))
 
 		// Assign it, we should get this build
@@ -770,10 +861,15 @@ func TestJobCancel(t *testing.T) {
 
 		s := TestState(t)
 		defer s.Close()
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
 
 		// Create a build
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 		})))
 
 		// Assign it, we should get this build
@@ -798,11 +894,16 @@ func TestJobCancel(t *testing.T) {
 
 		s := TestState(t)
 		defer s.Close()
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
 
 		// Create a build
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
-			Id:        "A",
-			Operation: &vagrant_server.Job_Run{},
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
+			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
+			Operation: &vagrant_server.Job_Command{},
 		})))
 
 		// Assign it, we should get this build
@@ -822,9 +923,12 @@ func TestJobCancel(t *testing.T) {
 		require.NotEmpty(job.CancelTime)
 
 		// Create a another job
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
-			Id:        "B",
-			Operation: &vagrant_server.Job_Run{},
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
+			Id: "B",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
+			Operation: &vagrant_server.Job_Command{},
 		})))
 
 		ws := memdb.NewWatchSet()
@@ -843,10 +947,15 @@ func TestJobCancel(t *testing.T) {
 
 		s := TestState(t)
 		defer s.Close()
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
 
 		// Create a build
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 		})))
 
 		// Assign it, we should get this build
@@ -880,6 +989,8 @@ func TestJobHeartbeat(t *testing.T) {
 
 		s := TestState(t)
 		defer s.Close()
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
 
 		// Set a short timeout
 		old := jobHeartbeatTimeout
@@ -887,8 +998,11 @@ func TestJobHeartbeat(t *testing.T) {
 		jobHeartbeatTimeout = 5 * time.Millisecond
 
 		// Create a build
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 		})))
 
 		// Assign it, we should get this build
@@ -901,6 +1015,8 @@ func TestJobHeartbeat(t *testing.T) {
 		// Ack it
 		_, err = s.JobAck(job.Id, true)
 		require.NoError(err)
+
+		time.Sleep(1 * time.Second)
 
 		// Should time out
 		require.Eventually(func() bool {
@@ -921,10 +1037,15 @@ func TestJobHeartbeat(t *testing.T) {
 
 		s := TestState(t)
 		defer s.Close()
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
 
 		// Create a build
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 		})))
 
 		// Assign it, we should get this build
@@ -985,9 +1106,15 @@ func TestJobHeartbeat(t *testing.T) {
 		s := TestState(t)
 		defer s.Close()
 
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
+
 		// Create a build
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 		})))
 
 		// Assign it, we should get this build
@@ -1026,7 +1153,7 @@ func TestJobHeartbeat(t *testing.T) {
 		}()
 
 		// Sleep for a bit
-		time.Sleep(1 * time.Second)
+		time.Sleep(10 * time.Millisecond)
 
 		// Verify it is running
 		job, err = s.JobById("A", nil)
@@ -1035,6 +1162,10 @@ func TestJobHeartbeat(t *testing.T) {
 
 		// Stop heartbeating
 		cancel()
+
+		// Pause before check. We encounter the database being
+		// scrubbed otherwise (TODO: fixme)
+		time.Sleep(1 * time.Second)
 
 		// Should time out
 		require.Eventually(func() bool {
@@ -1055,10 +1186,15 @@ func TestJobHeartbeat(t *testing.T) {
 
 		s := TestState(t)
 		defer s.Close()
+		projRef := TestProjectProto(t, s)
+		testRunnerProto(t, s, &vagrant_server.Runner{Id: "R_A"})
 
 		// Create a build
-		require.NoError(s.JobCreate(serverptypes.TestJobNew(t, &vagrant_server.Job{
+		require.NoError(s.JobCreate(TestJobProto(t, &vagrant_server.Job{
 			Id: "A",
+			Scope: &vagrant_server.Job_Project{
+				Project: projRef,
+			},
 		})))
 
 		// Assign it, we should get this build
@@ -1103,6 +1239,7 @@ func TestJobHeartbeat(t *testing.T) {
 		// Verify it exists
 		job, err = s.JobById("A", nil)
 		require.NoError(err)
+		require.NotNil(job)
 		require.Equal(vagrant_server.Job_RUNNING, job.Job.State)
 
 		// Should time out

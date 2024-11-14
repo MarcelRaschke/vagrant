@@ -1,15 +1,18 @@
-require "cgi"
-require "uri"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require "log4r"
-require "digest"
-require "digest/md5"
-require "digest/sha1"
-require "vagrant/util/busy"
-require "vagrant/util/platform"
-require "vagrant/util/subprocess"
-require "vagrant/util/curl_helper"
-require "vagrant/util/file_checksum"
+Vagrant.require "cgi"
+Vagrant.require "uri"
+
+Vagrant.require "log4r"
+Vagrant.require "digest"
+Vagrant.require "digest/md5"
+Vagrant.require "digest/sha1"
+Vagrant.require "vagrant/util/busy"
+Vagrant.require "vagrant/util/platform"
+Vagrant.require "vagrant/util/subprocess"
+Vagrant.require "vagrant/util/curl_helper"
+Vagrant.require "vagrant/util/file_checksum"
 
 module Vagrant
   module Util
@@ -22,12 +25,6 @@ module Vagrant
       #
       #     Vagrant/1.7.4 (+https://www.vagrantup.com; ruby2.1.0)
       USER_AGENT = "Vagrant/#{VERSION} (+https://www.vagrantup.com; #{RUBY_ENGINE}#{RUBY_VERSION}) #{ENV['VAGRANT_USER_AGENT_PROVISIONAL_STRING']}".strip.freeze
-
-      # Hosts that do not require notification on redirect
-      SILENCED_HOSTS = [
-        "vagrantcloud.com".freeze,
-        "vagrantup.com".freeze
-      ].freeze
 
       attr_accessor :source
       attr_reader :destination
@@ -72,6 +69,14 @@ module Vagrant
           :sha512 => options[:sha512]
         }.compact
         @extra_download_options = options[:box_extra_download_options] || []
+        # If on Windows SSL revocation checks should be best effort. More context
+        # for this usage can be found in the following links:
+        #
+        # https://github.com/curl/curl/issues/3727
+        # https://github.com/curl/curl/pull/4981
+        if Platform.windows?
+          @ssl_revoke_best_effort = !options[:disable_ssl_revoke_best_effort]
+        end
       end
 
       # This executes the actual download, downloading the source file
@@ -247,6 +252,7 @@ module Vagrant
         options << "--cert" << @client_cert if @client_cert
         options << "-u" << @auth if @auth
         options << "--location-trusted" if @location_trusted
+        options << "--ssl-revoke-best-effort" if @ssl_revoke_best_effort
 
         options.concat(@extra_download_options)
 
