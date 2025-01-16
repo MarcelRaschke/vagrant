@@ -1,8 +1,11 @@
-require 'log4r'
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require 'vagrant/action/hook'
-require 'vagrant/util/busy'
-require 'vagrant/util/experimental'
+Vagrant.require 'log4r'
+
+Vagrant.require 'vagrant/action/hook'
+Vagrant.require 'vagrant/util/busy'
+Vagrant.require 'vagrant/util/experimental'
 
 module Vagrant
   module Action

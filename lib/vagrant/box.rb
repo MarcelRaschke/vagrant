@@ -1,14 +1,17 @@
-require 'fileutils'
-require "tempfile"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require "json"
-require "log4r"
+Vagrant.require 'fileutils'
+Vagrant.require "tempfile"
 
-require "vagrant/box_metadata"
-require "vagrant/util/downloader"
-require "vagrant/util/platform"
-require "vagrant/util/safe_chdir"
-require "vagrant/util/subprocess"
+Vagrant.require "json"
+Vagrant.require "log4r"
+
+Vagrant.require "vagrant/box_metadata"
+Vagrant.require "vagrant/util/downloader"
+Vagrant.require "vagrant/util/platform"
+Vagrant.require "vagrant/util/safe_chdir"
+Vagrant.require "vagrant/util/subprocess"
 
 module Vagrant
   # Represents a "box," which is a package Vagrant environment that is used
@@ -33,6 +36,11 @@ module Vagrant
     #
     # @return [Symbol]
     attr_reader :provider
+
+    # This is the architecture that this box is build for.
+    #
+    # @return [String]
+    attr_reader :architecture
 
     # The version of this box.
     #
@@ -62,13 +70,15 @@ module Vagrant
     # @param [Symbol] provider The provider that this box implements.
     # @param [Pathname] directory The directory where this box exists on
     #   disk.
+    # @param [String] architecture Architecture the box was built for
     # @param [String] metadata_url Metadata URL for box
     # @param [Hook] hook A hook to apply to the box downloader, for example, for authentication
-    def initialize(name, provider, version, directory, metadata_url: nil, hook: nil)
+    def initialize(name, provider, version, directory, architecture: nil, metadata_url: nil, hook: nil)
       @name      = name
       @version   = version
       @provider  = provider
       @directory = directory
+      @architecture = architecture
       @metadata_url = metadata_url
       @hook = hook
 
@@ -127,6 +137,7 @@ module Vagrant
         # If all the data matches, record it
         if box_data["name"] == self.name &&
           box_data["provider"] == self.provider.to_s &&
+          box_data["architecture"] == self.architecture &&
           box_data["version"] == self.version.to_s
           results << entry
         end
@@ -191,10 +202,10 @@ module Vagrant
       version ||= ""
       version += "> #{@version}"
       md      = self.load_metadata(download_options)
-      newer   = md.version(version, provider: @provider)
+      newer   = md.version(version, provider: @provider, architecture: @architecture)
       return nil if !newer
 
-      [md, newer, newer.provider(@provider)]
+      [md, newer, newer.provider(@provider, @architecture)]
     end
 
     # Check if a box update check is allowed. Uses a file
@@ -238,13 +249,13 @@ module Vagrant
     end
 
     # Implemented for comparison with other boxes. Comparison is
-    # implemented by comparing names and providers.
+    # implemented by comparing names, providers, and architectures.
     def <=>(other)
       return super if !other.is_a?(self.class)
 
       # Comparison is done by composing the name and provider
-      "#{@name}-#{@version}-#{@provider}" <=>
-      "#{other.name}-#{other.version}-#{other.provider}"
+      "#{@name}-#{@version}-#{@provider}-#{@architecture}" <=>
+      "#{other.name}-#{other.version}-#{other.provider}-#{other.architecture}"
     end
   end
 end

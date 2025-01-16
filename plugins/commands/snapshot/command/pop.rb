@@ -1,7 +1,8 @@
-require 'json'
-require 'optparse'
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require 'vagrant'
+Vagrant.require 'json'
+Vagrant.require 'optparse'
 
 require Vagrant.source_root.join("plugins/commands/up/start_mixins")
 

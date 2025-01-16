@@ -1,4 +1,7 @@
-require "ipaddr"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "ipaddr"
 
 module Vagrant
   module Util

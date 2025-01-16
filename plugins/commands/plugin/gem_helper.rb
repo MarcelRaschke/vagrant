@@ -1,8 +1,11 @@
-require "rubygems"
-require "rubygems/config_file"
-require "rubygems/gem_runner"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require "log4r"
+Vagrant.require "rubygems"
+Vagrant.require "rubygems/config_file"
+Vagrant.require "rubygems/gem_runner"
+
+Vagrant.require "log4r"
 
 module VagrantPlugins
   module CommandPlugin

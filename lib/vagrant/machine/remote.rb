@@ -1,5 +1,8 @@
-require 'ostruct'
-require "vagrant/util/scoped_hash_override"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require 'ostruct'
+Vagrant.require "vagrant/util/scoped_hash_override"
 
 module Vagrant
   class Machine

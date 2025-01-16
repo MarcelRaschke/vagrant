@@ -1,5 +1,9 @@
-require "base64"
-require "tmpdir"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "base64"
+Vagrant.require "tmpdir"
+
 require_relative "subprocess"
 require_relative "which"
 

@@ -1,5 +1,8 @@
-require "ipaddr"
-require "timeout"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "ipaddr"
+Vagrant.require "timeout"
 
 module VagrantPlugins
   module HyperV

@@ -1,4 +1,7 @@
-require "mutex_m"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "mutex_m"
 
 module VagrantPlugins
   module CommandServe

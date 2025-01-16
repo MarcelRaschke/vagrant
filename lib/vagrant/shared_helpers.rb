@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 require "pathname"
 require "tempfile"
 require "thread"
@@ -165,7 +168,7 @@ module Vagrant
     if ENV["VAGRANT_ENABLE_RESOLV_REPLACE"]
       if !ENV["VAGRANT_DISABLE_RESOLV_REPLACE"]
         begin
-          require "resolv-replace"
+          Vagrant.require "resolv-replace"
           true
         rescue
           false
@@ -189,7 +192,7 @@ module Vagrant
   # @return [Logger]
   def self.global_logger
     if @_global_logger.nil?
-      require "log4r"
+      Vagrant.require "log4r"
       @_global_logger = Log4r::Logger.new("vagrant::global")
     end
     @_global_logger
@@ -223,6 +226,68 @@ module Vagrant
     @_default_cli_options.dup
   end
 
+  # Loads the provided path. If the base of the path
+  # is a Vagrant runtime dependency, the gem will be
+  # activated with the proper constraint first.
+  #
+  # NOTE: This is currently disabled by default and
+  # will transition to enabled by default as more
+  # non-installer based environments are tested.
+  #
+  # @return [nil]
+  def self.require(path)
+    catch(:activation_complete) do
+      # If activation is not enabled, don't attempt activation
+      throw :activation_complete if ENV["VAGRANT_ENABLE_GEM_ACTIVATION"].nil?
+
+      # If it's a vagrant path, don't do anything.
+      throw :activation_complete if path.to_s.start_with?("vagrant/")
+
+      # Attempt to fetch the vagrant specification
+      if @_vagrant_spec.nil?
+        @_vagrant_activated_dependencies = {}
+        begin
+          @_vagrant_spec = Gem::Specification.find_by_name("vagrant")
+        rescue Gem::MissingSpecError
+          # If it couldn't be found, print a warning to stderr and bail
+          if !@_spec_load_failure_warning
+            $stderr.puts "WARN: Failed to locate vagrant specification for dependency loading"
+            @_spec_load_failure_warning = true
+          end
+
+          throw :activation_complete
+        end
+      end
+
+      # Attempt to get the name of the gem by the given path
+      dep_name = Gem::Specification.find_by_path(path)&.name
+
+      # Bail if a dependency name cannot be determined
+      throw :activation_complete if dep_name.nil?
+
+      # Bail if already activated
+      throw :activation_complete if @_vagrant_activated_dependencies[dep_name]
+
+      # Extract the dependency from the runtime dependency list
+      dependency = @_vagrant_spec.runtime_dependencies.detect do |d|
+        d.name == dep_name
+      end
+
+      # If the dependency isn't found, bail
+      throw :activation_complete if dependency.nil?
+
+      # Activate the gem
+      gem(dependency.name, dependency.requirement.as_list)
+puts "Activated: #{dependency.name}"
+      @_vagrant_activated_dependencies[dependency.name] = true
+    end
+
+    # Finally, require the provided path.
+    ::Kernel.require(path)
+
+    nil
+  end
+
   # Check if Vagrant is running in server mode
   #
   # @return [Boolean]
@@ -235,26 +300,57 @@ module Vagrant
   # @return [true]
   def self.enable_server_mode!
     if !server_mode?
-      SERVER_MODE_CALLBACKS.each(&:call)
       Util::HCLogOutputter.new("hclog")
       Log4r::Outputter["hclog"].formatter = Util::HCLogFormatter.new
+      Log4r::Outputter.stderr.formatter = Log4r::Outputter["hclog"].formatter
+      Log4r::RootLogger.instance.outputters = Log4r::Outputter["hclog"]
       Log4r::Logger.each_logger do |l|
-        l.outputters = Log4r::Outputter["hclog"] if l.parent == Log4r::RootLogger.instance
+        l.outputters = Log4r::Outputter["hclog"] #if l.parent&.is_root?
       end
+
       Log4r::Logger::Repository.class_eval do
         def self.[]=(n, l)
           self.synchronize do
-            l.outputters = Log4r::Outputter["hclog"] if l.parent == Log4r::RootLogger.instance
+            l.outputters = Log4r::Outputter["hclog"] # if l.parent&.is_root?
             instance.loggers[n] = l
           end
         end
       end
+
+      # By default only display error logs from the mappers unless explicitly
+      # requested due to their verbosity
+      if ENV["VAGRANT_LOG_MAPPER"].to_s == ""
+        l = Log4r::Logger.factory("vagrantplugins::commandserve::mappers")
+        l.level = Log4r::ERROR
+      end
     end
-    if ENV["VAGRANT_LOG_MAPPER"].to_s == ""
-      l = Log4r::Logger.new("vagrantplugins::commandserve::mappers::internal")
-      l.level = Log4r::ERROR
-    end
+    Log4r::Logger.factory("vagrant").trace("service logger initialization")
+    Log4r::Logger.factory("vagrantplugins").trace("service logger initialization")
+
+    load_vagrant_proto!
+    SERVER_MODE_CALLBACKS.each(&:call)
+
     @_server_mode = true
+  end
+
+  # Load the vagrant proto messages
+  def self.load_vagrant_proto!
+    return if @_vagrant_proto_loaded
+    # Update the load path so our protos can be located
+    $LOAD_PATH << Vagrant.source_root.join("lib/vagrant/protobufs").to_s
+    $LOAD_PATH << Vagrant.source_root.join("lib/vagrant/protobufs/proto").to_s
+    $LOAD_PATH << Vagrant.source_root.join("lib/vagrant/protobufs/proto/vagrant_plugin_sdk").to_s
+
+    # Load our protos so they are available
+    require 'vagrant/protobufs/proto/vagrant_server/server_pb'
+    require 'vagrant/protobufs/proto/vagrant_server/server_services_pb'
+    require 'vagrant/protobufs/proto/ruby_vagrant/ruby-server_pb'
+    require 'vagrant/protobufs/proto/ruby_vagrant/ruby-server_services_pb'
+    require 'vagrant/protobufs/proto/vagrant_plugin_sdk/plugin_pb'
+    require 'vagrant/protobufs/proto/vagrant_plugin_sdk/plugin_services_pb'
+    require 'vagrant/protobufs/proto/plugin/grpc_broker_pb'
+    require 'vagrant/protobufs/proto/plugin/grpc_broker_services_pb'
+    @_vagrant_proto_loaded = true
   end
 
   SERVER_MODE_CALLBACKS = [

@@ -1,4 +1,7 @@
-require "timeout"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "timeout"
 
 module Vagrant
   module Plugin

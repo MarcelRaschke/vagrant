@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 module VagrantPlugins
   module Kernel_V2
     class SSHConnectConfig < Vagrant.plugin("2", :config)
@@ -12,12 +15,14 @@ module VagrantPlugins
       attr_accessor :password
       attr_accessor :insert_key
       attr_accessor :keys_only
+      attr_accessor :key_type
       attr_accessor :paranoid
       attr_accessor :verify_host_key
       attr_accessor :compression
       attr_accessor :dsa_authentication
       attr_accessor :extra_args
       attr_accessor :remote_user
+      attr_accessor :disable_deprecated_algorithms
 
       def initialize
         @host             = UNSET_VALUE
@@ -29,12 +34,14 @@ module VagrantPlugins
         @password         = UNSET_VALUE
         @insert_key       = UNSET_VALUE
         @keys_only        = UNSET_VALUE
+        @key_type         = UNSET_VALUE
         @paranoid         = UNSET_VALUE
         @verify_host_key  = UNSET_VALUE
         @compression      = UNSET_VALUE
         @dsa_authentication = UNSET_VALUE
         @extra_args       = UNSET_VALUE
         @remote_user      = UNSET_VALUE
+        @disable_deprecated_algorithms = UNSET_VALUE
       end
 
       def finalize!
@@ -45,12 +52,14 @@ module VagrantPlugins
         @password         = nil if @password == UNSET_VALUE
         @insert_key       = true if @insert_key == UNSET_VALUE
         @keys_only        = true if @keys_only == UNSET_VALUE
+        @key_type         = :auto if @key_type == UNSET_VALUE
         @paranoid         = false if @paranoid == UNSET_VALUE
         @verify_host_key  = :never if @verify_host_key == UNSET_VALUE
         @compression      = true if @compression == UNSET_VALUE
         @dsa_authentication = true if @dsa_authentication == UNSET_VALUE
         @extra_args       = nil if @extra_args == UNSET_VALUE
         @config           = nil if @config == UNSET_VALUE
+        @disable_deprecated_algorithms = false if @disable_deprecated_algorithms == UNSET_VALUE
         @connect_timeout  = DEFAULT_SSH_CONNECT_TIMEOUT if @connect_timeout == UNSET_VALUE
 
         if @private_key_path && !@private_key_path.is_a?(Array)
@@ -89,6 +98,10 @@ module VagrantPlugins
           @connect_timeout = @connect_timeout.to_i
         rescue
           # ignore
+        end
+
+        if @key_type
+          @key_type = @key_type.to_sym
         end
       end
 
@@ -132,6 +145,14 @@ module VagrantPlugins
           errors << I18n.t(
             "vagrant.config.ssh.connect_timeout_invalid_value",
             given: @connect_timeout.to_s)
+        end
+
+        if @key_type != :auto && !Vagrant::Util::Keypair.valid_type?(@key_type)
+          errors << I18n.t(
+            "vagrant.config.ssh.connect_invalid_key_type",
+            given: @key_type.to_s,
+            supported: Vagrant::Util::Keypair.available_types.join(", ")
+          )
         end
 
         errors

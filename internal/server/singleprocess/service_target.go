@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package singleprocess
 
 import (
@@ -13,12 +16,12 @@ func (s *service) UpsertTarget(
 	ctx context.Context,
 	req *vagrant_server.UpsertTargetRequest,
 ) (*vagrant_server.UpsertTargetResponse, error) {
-	err := s.state.TargetPut(req.Target)
+	result, err := s.state.TargetPut(req.Target)
 	if err != nil {
 		return nil, err
 	}
 
-	return &vagrant_server.UpsertTargetResponse{Target: req.Target}, nil
+	return &vagrant_server.UpsertTargetResponse{Target: result}, nil
 }
 
 func (s *service) DeleteTarget(

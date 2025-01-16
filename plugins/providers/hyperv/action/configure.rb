@@ -1,6 +1,8 @@
-require "fileutils"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require "log4r"
+Vagrant.require "fileutils"
+Vagrant.require "log4r"
 
 module VagrantPlugins
   module HyperV

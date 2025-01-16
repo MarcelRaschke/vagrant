@@ -1,13 +1,16 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 # rubocop:disable Metrics/MethodLength
 # rubocop:disable Metrics/AbcSize
 # rubocop:disable Style/BracesAroundHashParameters
 #
 # FIXME: address disabled warnings
 #
-require 'set'
-require 'tempfile'
-require 'pathname'
-require 'vagrant/util/template_renderer'
+Vagrant.require 'set'
+Vagrant.require 'tempfile'
+Vagrant.require 'pathname'
+Vagrant.require 'vagrant/util/template_renderer'
 
 module VagrantPlugins
   module GuestAlpine

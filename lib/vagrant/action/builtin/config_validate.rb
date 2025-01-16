@@ -1,4 +1,7 @@
-require "vagrant/util/template_renderer"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "vagrant/util/template_renderer"
 
 module Vagrant
   module Action

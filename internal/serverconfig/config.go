@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package serverconfig
 
 // Client configures a client to connect to a server.
@@ -36,17 +39,6 @@ type Config struct {
 
 	// URL configures a server to use a URL service.
 	URL *URL `hcl:"url,block"`
-
-	// CEBConfig configures the entrypoint binary for deployments
-	CEBConfig *CEBConfig `hcl:"entrypoint_config,block"`
-}
-
-// CEBConfig is specific configuration for the entrypoint binaries
-// injected into the deployments
-type CEBConfig struct {
-	Addr          string `hcl:"addr,optional"`
-	TLSEnabled    bool   `hcl:"tls_enabled,optional"`
-	TLSSkipVerify bool   `hcl:"tls_skip_verify,optional"`
 }
 
 type Listener struct {

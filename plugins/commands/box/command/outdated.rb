@@ -1,4 +1,7 @@
-require 'optparse'
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require 'optparse'
 
 require_relative 'download_mixins'
 
@@ -16,7 +19,7 @@ module VagrantPlugins
             o.banner = "Usage: vagrant box outdated [options]"
             o.separator ""
             o.separator "Checks if there is a new version available for the box"
-            o.separator "that are you are using. If you pass in the --global flag,"
+            o.separator "that you are using. If you pass in the --global flag,"
             o.separator "all boxes will be checked for updates."
             o.separator ""
             o.separator "Options:"

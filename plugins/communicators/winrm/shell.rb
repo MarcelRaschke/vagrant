@@ -1,16 +1,19 @@
-require "timeout"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require "log4r"
+Vagrant.require "timeout"
 
-require "vagrant/util/retryable"
-require "vagrant/util/silence_warnings"
+Vagrant.require "log4r"
+
+Vagrant.require "vagrant/util/retryable"
+Vagrant.require "vagrant/util/silence_warnings"
 
 Vagrant::Util::SilenceWarnings.silence! do
-  require "winrm"
+  Vagrant.require "winrm"
 end
 
-require "winrm-elevated"
-require "winrm-fs"
+Vagrant.require "winrm-elevated"
+Vagrant.require "winrm-fs"
 
 module VagrantPlugins
   module CommunicatorWinRM

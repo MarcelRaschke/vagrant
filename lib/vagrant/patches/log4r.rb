@@ -1,9 +1,12 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 # This adds trace level support to log4r. Since log4r
 # loggers use the trace method for checking if trace
 # information should be included in the output, we
 # make some modifications to allow the trace check to
 # still work while also supporting trace as a valid level
-require "log4r/loggerfactory"
+Vagrant.require "log4r/loggerfactory"
 
 if !Log4r::Logger::LoggerFactory.respond_to?(:fake_define_methods)
   class Log4r::Logger::LoggerFactory
@@ -34,6 +37,18 @@ if !Log4r::Logger::LoggerFactory.respond_to?(:fake_define_methods)
       alias_method :undefine_methods, :fake_undefine_methods
       alias_method :real_set_log, :set_log
       alias_method :set_log, :fake_set_log
+    end
+  end
+
+  class Log4r::Logger
+    # The factory allows using a previously created logger
+    # instance if it exists. Doing this prevents knocking
+    # out configuration that may have already been applied
+    # to the logger instance (like log level)
+    def self.factory(name, *args)
+      l = Log4r::Logger::Repository[name]
+      return l unless l.nil?
+      Log4r::Logger.new(name, *args)
     end
   end
 end

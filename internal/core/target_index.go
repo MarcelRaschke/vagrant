@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package core
 
 import (
@@ -38,7 +41,7 @@ func (t *TargetIndex) Delete(uuid string) (err error) {
 	return target.(*Target).Destroy()
 }
 
-// Get target from entry by uuid or name
+// Get target from entry by uuid
 func (t *TargetIndex) Get(uuid string) (entry core.Target, err error) {
 	// Start with finding the target
 	result, err := t.client.FindTarget(t.ctx, &vagrant_server.FindTargetRequest{

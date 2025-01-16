@@ -1,4 +1,7 @@
-require "pathname"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "pathname"
 
 module VagrantPlugins
   module FTPPush
@@ -47,7 +50,7 @@ module VagrantPlugins
     #
     class FTPAdapter < Adapter
       def initialize(*)
-        require "net/ftp"
+        Vagrant.require "net/ftp"
         super
       end
 
@@ -104,7 +107,7 @@ module VagrantPlugins
     #
     class SFTPAdapter < Adapter
       def initialize(*)
-        require "net/sftp"
+        Vagrant.require "net/sftp"
         super
         @dirs = {}
       end

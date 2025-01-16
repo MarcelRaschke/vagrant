@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package core
 
 import (
@@ -19,7 +22,7 @@ import (
 func hashicorpBionicBoxData() *vagrant_server.Box {
 	testMetadata, _ := structpb.NewStruct(make(map[string]interface{}))
 	return &vagrant_server.Box{
-		Id:          "123",
+		ResourceId:  "123",
 		Provider:    "virtualbox",
 		Version:     "0.0.282",
 		Directory:   "/tmp/boxes",
@@ -32,7 +35,7 @@ func hashicorpBionicBoxData() *vagrant_server.Box {
 func testboxBoxData() *vagrant_server.Box {
 	testMetadata, _ := structpb.NewStruct(make(map[string]interface{}))
 	return &vagrant_server.Box{
-		Id:          "123",
+		ResourceId:  "123",
 		Provider:    "virtualbox",
 		Version:     "1.2.3",
 		Directory:   "/tmp/boxes",

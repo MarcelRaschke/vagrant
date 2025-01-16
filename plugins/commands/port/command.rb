@@ -1,6 +1,9 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 require "vagrant/util/presence"
 
-require "optparse"
+Vagrant.require "optparse"
 
 module VagrantPlugins
   module CommandPort

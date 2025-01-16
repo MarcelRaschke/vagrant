@@ -1,7 +1,8 @@
-require 'optparse'
-require 'set'
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require "vagrant"
+Vagrant.require 'optparse'
+Vagrant.require 'set'
 
 require File.expand_path("../start_mixins", __FILE__)
 

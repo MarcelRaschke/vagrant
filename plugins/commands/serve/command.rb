@@ -1,39 +1,40 @@
-$LOAD_PATH << Vagrant.source_root.join("lib/vagrant/protobufs").to_s
-$LOAD_PATH << Vagrant.source_root.join("lib/vagrant/protobufs/proto").to_s
-$LOAD_PATH << Vagrant.source_root.join("lib/vagrant/protobufs/proto/vagrant_plugin_sdk").to_s
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require 'vagrant/protobufs/proto/vagrant_server/server_pb'
-require 'vagrant/protobufs/proto/vagrant_server/server_services_pb'
-require 'vagrant/protobufs/proto/ruby_vagrant/ruby-server_pb'
-require 'vagrant/protobufs/proto/ruby_vagrant/ruby-server_services_pb'
-require 'vagrant/protobufs/proto/vagrant_plugin_sdk/plugin_pb'
-require 'vagrant/protobufs/proto/vagrant_plugin_sdk/plugin_services_pb'
-require 'vagrant/protobufs/proto/plugin/grpc_broker_pb'
-require 'vagrant/protobufs/proto/plugin/grpc_broker_services_pb'
-
-require "optparse"
-require 'grpc'
-require 'grpc/health/checker'
-require 'grpc/health/v1/health_services_pb'
+Vagrant.require "optparse"
 
 module VagrantPlugins
   module CommandServe
-    # Simple constant aliases to reduce namespace typing
-    SDK = Hashicorp::Vagrant::Sdk
-    SRV = Hashicorp::Vagrant
-    Empty = Google::Protobuf::Empty
-
     autoload :Broker, Vagrant.source_root.join("plugins/commands/serve/broker").to_s
     autoload :Client, Vagrant.source_root.join("plugins/commands/serve/client").to_s
     autoload :Mappers, Vagrant.source_root.join("plugins/commands/serve/mappers").to_s
     autoload :Service, Vagrant.source_root.join("plugins/commands/serve/service").to_s
     autoload :Type, Vagrant.source_root.join("plugins/commands/serve/type").to_s
     autoload :Util, Vagrant.source_root.join("plugins/commands/serve/util").to_s
+    autoload :SDK, Vagrant.source_root.join("plugins/commands/serve/constants").to_s
+    autoload :SRV, Vagrant.source_root.join("plugins/commands/serve/constants").to_s
+    autoload :Empty, Vagrant.source_root.join("plugins/commands/serve/constants").to_s
 
     class << self
       attr_accessor :broker
       attr_accessor :server
       attr_reader :cache
+
+      # Loads the required dependencies for this command. This is isolated
+      # into a method so that the dependencies can be loaded just in time when
+      # the command is actually executed.
+      def load_dependencies!
+        return if @dependencies_loaded
+        Vagrant.require 'grpc'
+        Vagrant.require 'grpc/health/checker'
+        Vagrant.require 'grpc/health/v1/health_services_pb'
+
+        # Add conversion patches
+        require Vagrant.source_root.join("plugins/commands/serve/util/direct_conversions.rb").to_s
+
+        # Mark dependencies as loaded
+        @dependencies_loaded = true
+      end
     end
     @cache = Util::Cacher.new
 
@@ -49,6 +50,9 @@ module VagrantPlugins
       end
 
       def execute
+        # Load dependencies before we start
+        CommandServe.load_dependencies!
+
         options = {
           bind: DEFAULT_BIND,
           min_port: DEFAULT_PORT_RANGE.first,
@@ -124,7 +128,7 @@ module VagrantPlugins
 
         s.handle(health_checker)
 
-        logger.debug("writing connection informatation to stdout for go-plugin")
+        logger.debug("writing connection information to stdout for go-plugin")
         STDOUT.puts "1|1|tcp|#{bind_addr}:#{port}|grpc"
         STDOUT.flush
         logger.info("Vagrant GRPC service is now running addr=#{bind_addr.inspect} port=#{port.inspect}")
@@ -138,6 +142,3 @@ module VagrantPlugins
     end
   end
 end
-
-# Load in our conversions down here so all the autoload stuff is in place
-require Vagrant.source_root.join("plugins/commands/serve/util/direct_conversions.rb").to_s

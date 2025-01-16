@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: BUSL-1.1
+
 package core
 
 import (
@@ -237,7 +240,9 @@ func (m *Machine) MachineState() (state *core.MachineState, err error) {
 // SetMachineState implements core.Machine
 func (m *Machine) SetMachineState(state *core.MachineState) (err error) {
 	var st *vagrant_plugin_sdk.Args_Target_Machine_State
-	mapstructure.Decode(state, &st)
+	if err := mapstructure.Decode(state, &st); err != nil {
+		return err
+	}
 	m.machine.State = st
 
 	switch st.Id {
@@ -490,7 +495,8 @@ func (m *Machine) AsTarget() (core.Target, error) {
 func (m *Machine) SaveMachine() (err error) {
 	m.logger.Debug("saving machine to db", "machine", m.machine.Id)
 	// Update the target record and uuid to match the machine's new state
-	m.target.Uuid = m.machine.Id
+	// TODO(spox): the uuid shouldn't be getting set to the Id, was there any reason for this?
+	// m.target.Uuid = m.machine.Id
 	m.target.Record, err = anypb.New(m.machine)
 	if err != nil {
 		m.logger.Warn("failed to convert machine data to any value",

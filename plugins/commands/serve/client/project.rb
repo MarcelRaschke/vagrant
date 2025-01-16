@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
 module VagrantPlugins
   module CommandServe
     class Client
@@ -54,7 +57,7 @@ module VagrantPlugins
           resp.path
         end
 
-        def default_provider(opts)
+        def default_provider(opts={})
           req = ::Hashicorp::Vagrant::Sdk::Project::DefaultProviderRequest.new(
             exclude: opts.fetch(:exclude, []),
             force_default: opts.fetch(:force_default, true),
@@ -85,12 +88,9 @@ module VagrantPlugins
 
         # return [Vagrant::Machine]
         def machine(name, provider)
-          t = client.target(SDK::Project::TargetRequest.new(
-            name: name,
-            provider: provider,
-          ))
-          machine = mapper.map(t, to: Vagrant::Machine)
-          return machine
+          logger.info("getting machine from vagrant-go name: #{name} provider: #{provider}")
+          t = target(name, provider)
+          Vagrant::Machine.new(client: t)
         end
 
         # return [String]

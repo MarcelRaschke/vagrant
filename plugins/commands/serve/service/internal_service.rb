@@ -1,10 +1,13 @@
-require "vagrant/plugin/v2/plugin"
-require "vagrant/vagrantfile"
-require "vagrant/box_collection"
-require "vagrant/config"
-require "pathname"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require 'google/protobuf/well_known_types'
+Vagrant.require "vagrant/plugin/v2/plugin"
+Vagrant.require "vagrant/vagrantfile"
+Vagrant.require "vagrant/box_collection"
+Vagrant.require "vagrant/config"
+Vagrant.require "pathname"
+
+Vagrant.require 'google/protobuf/well_known_types'
 
 module VagrantPlugins
   module CommandServe

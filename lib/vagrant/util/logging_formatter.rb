@@ -1,5 +1,8 @@
-require "vagrant/util/credential_scrubber"
-require "log4r/formatter/formatter"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "vagrant/util/credential_scrubber"
+Vagrant.require "log4r/formatter/formatter"
 
 module Vagrant
   module Util
@@ -46,7 +49,8 @@ module Vagrant
           d = {
             "@timestamp" => Time.now.strftime("%Y-%m-%dT%H:%M:%S.%6N%:z"),
             "@level" => Log4r::LNAMES[event.level].downcase,
-            "@module" => event.fullname.gsub("::", "."),
+            "@module" => event.fullname,
+            "@name" => event.name,
             "@message" => msg,
           }
           d["@caller"] = event.tracer[0] if event.tracer

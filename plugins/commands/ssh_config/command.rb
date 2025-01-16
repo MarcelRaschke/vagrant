@@ -1,7 +1,10 @@
-require 'optparse'
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require "vagrant/util/safe_puts"
-require "vagrant/util/platform"
+Vagrant.require 'optparse'
+
+Vagrant.require "vagrant/util/safe_puts"
+Vagrant.require "vagrant/util/platform"
 
 module VagrantPlugins
   module CommandSSHConfig
@@ -55,7 +58,8 @@ module VagrantPlugins
             proxy_command: ssh_info[:proxy_command],
             ssh_command:   ssh_info[:ssh_command],
             forward_env:   ssh_info[:forward_env],
-            config:        ssh_info[:config]
+            config:        ssh_info[:config],
+            disable_deprecated_algorithms: ssh_info[:disable_deprecated_algorithms]
           }
 
           # Render the template and output directly to STDOUT

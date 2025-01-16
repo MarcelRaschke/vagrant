@@ -1,6 +1,9 @@
-require "pp"
-require "google/protobuf/well_known_types"
-require "google/protobuf/wrappers_pb"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
+
+Vagrant.require "pp"
+Vagrant.require "google/protobuf/well_known_types"
+Vagrant.require "google/protobuf/wrappers_pb"
 
 module VagrantPlugins
   module CommandServe

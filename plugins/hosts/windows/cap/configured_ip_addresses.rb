@@ -1,10 +1,13 @@
-require "pathname"
-require "tempfile"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require "vagrant/util/downloader"
-require "vagrant/util/file_checksum"
-require "vagrant/util/powershell"
-require "vagrant/util/subprocess"
+Vagrant.require "pathname"
+Vagrant.require "tempfile"
+
+Vagrant.require "vagrant/util/downloader"
+Vagrant.require "vagrant/util/file_checksum"
+Vagrant.require "vagrant/util/powershell"
+Vagrant.require "vagrant/util/subprocess"
 
 module VagrantPlugins
   module HostWindows

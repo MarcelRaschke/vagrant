@@ -1,10 +1,12 @@
-require "digest/md5"
-require "fileutils"
-require "thread"
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: BUSL-1.1
 
-require "log4r"
+Vagrant.require "digest/md5"
+Vagrant.require "fileutils"
+Vagrant.require "thread"
+Vagrant.require "log4r"
 
-require "vagrant/util/silence_warnings"
+Vagrant.require "vagrant/util/silence_warnings"
 
 module VagrantPlugins
   module DockerProvider
